@@ -1,0 +1,30 @@
+# Roadmap
+
+- [x] Manter a identidade azul-marinho original
+- [x] Substituir projetos fictícios pelos cinco trabalhos enviados em alta resolução
+- [x] Trocar a galeria animada por uma apresentação editorial dos projetos
+- [x] Corrigir a revelação do conteúdo na abertura animada
+- [x] Aumentar o favicon
+- [x] Adicionar a logo ao rodapé
+- [x] Ligar os dois contatos ao WhatsApp informado
+- [x] Exibir KO Systems LTDA e CNPJ no rodapé
+- [x] Validar em desktop e celular
+- [x] Fazer o texto principal preencher a tela ao final da aproximação
+- [x] Posicionar a marca acima de SYSTEMS e animá-la junto ao scroll
+- [x] Inverter a ordem de Projetos e Serviços
+- [x] Remover LTDA e telefone do rodapé
+- [x] Direcionar “Fale conosco” ao WhatsApp
+- [x] Ampliar o símbolo dentro do favicon
+- [x] Usar somente o símbolo, sem o nome, na abertura e no favicon
+- [x] Ampliar a marca acima de SYSTEMS
+- [x] Aplicar o slideshow interativo aos projetos reais
+- [x] Centralizar e separar o símbolo de SYSTEMS na abertura
+- [x] Limitar a escala da abertura em navegadores amplos
+- [x] Remover a marca do canto superior esquerdo e realinhar a navegação
+- [x] Reconstruir o slideshow dos projetos com troca estável
+- [x] Separar a navegação entre esquerda e direita no cabeçalho
+- [x] Reposicionar símbolo e SYSTEMS no centro da abertura, sem linha inferior
+- [x] Aplicar a galeria animada a Projetos e Serviços
+- [x] Validar a nova abertura e as galerias em desktop e celular
+- [x] Aplicar a galeria expansível aos cinco projetos reais
+- [x] Validar expansão, modal e navegação dos projetos em desktop e celular
