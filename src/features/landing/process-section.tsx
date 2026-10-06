@@ -2,7 +2,11 @@ import { processSteps } from "./content";
 
 export function ProcessSection() {
   return (
-    <section id="processo" className="section-shell process-section" aria-labelledby="process-title">
+    <section
+      id="processo"
+      className="section-shell process-section"
+      aria-labelledby="process-title"
+    >
       <header className="section-heading">
         <span className="eyebrow">Como trabalhamos</span>
         <h2 id="process-title">Do problema à solução em operação.</h2>

@@ -74,7 +74,11 @@ export const projects: readonly ProjectCase[] = [
       "A empresa precisava saber com precisão quem utilizava cada linha e acompanhar trocas de aparelhos e responsáveis.",
     solution:
       "Um sistema interno com histórico e visão organizada do inventário móvel da operação.",
-    capabilities: ["Linhas e responsáveis", "Inventário de aparelhos", "Histórico de movimentações"],
+    capabilities: [
+      "Linhas e responsáveis",
+      "Inventário de aparelhos",
+      "Histórico de movimentações",
+    ],
     demoKind: null,
   },
 ];

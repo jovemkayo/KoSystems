@@ -1,0 +1,53 @@
+import { ArrowRight } from "lucide-react";
+
+import GlyphPortal from "@/components/ui/glyph-portal";
+import { buildWhatsAppUrl } from "./contact";
+import { ContactSection } from "./contact-section";
+import { projects } from "./content";
+import { ProcessSection } from "./process-section";
+import { ProjectShowcase } from "./project-showcase";
+import { ServicesSection } from "./services-section";
+import { SiteFooter } from "./site-footer";
+import { SiteHeader } from "./site-header";
+
+export function LandingPage() {
+  return (
+    <main id="inicio" className="landing-page">
+      <SiteHeader />
+      <GlyphPortal
+        word="SYSTEMS"
+        focusChar="S"
+        brandImage="/favicon.png"
+        scrollLength={2.4}
+        fontFamily={'"Sora", "Arial Black", sans-serif'}
+        fontWeight={700}
+        enterLabel="Ver projetos"
+        style={{
+          "--gp-paper": "var(--color-background)",
+          "--gp-ink": "var(--color-primary)",
+          "--gp-field": "var(--color-primary)",
+          "--gp-foreground": "var(--color-primary-foreground)",
+        }}
+      >
+        <div className="hero-reveal">
+          <span className="eyebrow light">Software sob medida</span>
+          <h1>Sistemas que transformam desafios reais em operações melhores.</h1>
+          <div className="hero-reveal-bottom">
+            <p>
+              Da ideia à publicação, criamos soluções digitais alinhadas à forma como sua empresa
+              trabalha — e preparadas para continuar evoluindo.
+            </p>
+            <a href={buildWhatsAppUrl()} target="_blank" rel="noreferrer">
+              Solicitar orçamento <ArrowRight aria-hidden="true" />
+            </a>
+          </div>
+        </div>
+      </GlyphPortal>
+      <ProjectShowcase projects={projects} />
+      <ServicesSection />
+      <ProcessSection />
+      <ContactSection />
+      <SiteFooter />
+    </main>
+  );
+}

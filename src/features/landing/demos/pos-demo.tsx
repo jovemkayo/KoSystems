@@ -25,7 +25,9 @@ export function PosDemo() {
         {items.map((item, index) => (
           <div className="demo-row" key={`${item.name}-${index}`}>
             <span>{item.name}</span>
-            <span>{item.price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span>
+            <span>
+              {item.price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+            </span>
           </div>
         ))}
       </div>

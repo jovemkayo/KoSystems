@@ -27,13 +27,18 @@ describe("seções institucionais", () => {
     const { rerender } = render(<ServicesSection />);
     expect(screen.getAllByRole("heading", { level: 3 })).toHaveLength(5);
     rerender(<ProcessSection />);
-    expect(screen.getAllByRole("heading", { level: 3 }).map((heading) => heading.textContent)).toEqual([
-      "Entender", "Desenhar", "Construir", "Publicar e evoluir",
-    ]);
+    expect(
+      screen.getAllByRole("heading", { level: 3 }).map((heading) => heading.textContent),
+    ).toEqual(["Entender", "Desenhar", "Construir", "Publicar e evoluir"]);
   });
 
   it("mantém apenas canais institucionais ativos", () => {
-    render(<><ContactSection /><SiteFooter /></>);
+    render(
+      <>
+        <ContactSection />
+        <SiteFooter />
+      </>,
+    );
     expect(screen.getByText("69.208.733/0001-12")).toBeVisible();
     expect(screen.getByRole("link", { name: "@ko.systems" })).toBeVisible();
     expect(screen.queryByRole("link", { name: /e-mail|github/i })).not.toBeInTheDocument();

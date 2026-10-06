@@ -22,11 +22,19 @@ export function DocumentDemo() {
         <div className="demo-table-wrap">
           <table>
             <thead>
-              <tr><th>Item</th><th>Qtd.</th><th>Unidade</th></tr>
+              <tr>
+                <th>Item</th>
+                <th>Qtd.</th>
+                <th>Unidade</th>
+              </tr>
             </thead>
             <tbody>
               {rows.map((row) => (
-                <tr key={row[0]}>{row.map((cell) => <td key={cell}>{cell}</td>)}</tr>
+                <tr key={row[0]}>
+                  {row.map((cell) => (
+                    <td key={cell}>{cell}</td>
+                  ))}
+                </tr>
               ))}
             </tbody>
           </table>

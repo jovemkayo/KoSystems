@@ -12,11 +12,18 @@ export function ProjectShowcase({ projects }: { projects: readonly ProjectCase[]
   if (!selected) return null;
 
   return (
-    <section id="projetos" className="section-shell projects-section" aria-labelledby="projects-title">
+    <section
+      id="projetos"
+      className="section-shell projects-section"
+      aria-labelledby="projects-title"
+    >
       <header className="section-heading">
         <span className="eyebrow">Projetos em operação</span>
         <h2 id="projects-title">Sistemas que resolvem o trabalho real.</h2>
-        <p>Casos reais apresentados sem dados de clientes. Selecione um projeto para conhecer a solução.</p>
+        <p>
+          Casos reais apresentados sem dados de clientes. Selecione um projeto para conhecer a
+          solução.
+        </p>
       </header>
 
       <div className="project-grid">
@@ -33,9 +40,19 @@ export function ProjectShowcase({ projects }: { projects: readonly ProjectCase[]
               onClick={() => setSelectedSlug(project.slug)}
             >
               <span className="project-preview" aria-hidden="true">
-                <span className="preview-window-bar"><i /><i /><i /></span>
-                <span className="preview-icon"><Icon /></span>
-                <span className="preview-lines"><i /><i /><i /></span>
+                <span className="preview-window-bar">
+                  <i />
+                  <i />
+                  <i />
+                </span>
+                <span className="preview-icon">
+                  <Icon />
+                </span>
+                <span className="preview-lines">
+                  <i />
+                  <i />
+                  <i />
+                </span>
               </span>
               <span className="project-card-copy">
                 <span className="project-segment">{project.segment}</span>
@@ -52,10 +69,18 @@ export function ProjectShowcase({ projects }: { projects: readonly ProjectCase[]
         <div className="project-story">
           <span className="eyebrow">{selected.segment}</span>
           <h3>{selected.title}</h3>
-          <div className="story-block"><span>O desafio</span><p>{selected.problem}</p></div>
-          <div className="story-block"><span>A solução</span><p>{selected.solution}</p></div>
+          <div className="story-block">
+            <span>O desafio</span>
+            <p>{selected.problem}</p>
+          </div>
+          <div className="story-block">
+            <span>A solução</span>
+            <p>{selected.solution}</p>
+          </div>
           <ul>
-            {selected.capabilities.map((capability) => <li key={capability}>{capability}</li>)}
+            {selected.capabilities.map((capability) => (
+              <li key={capability}>{capability}</li>
+            ))}
           </ul>
         </div>
         <div className="project-experience">
@@ -64,9 +89,21 @@ export function ProjectShowcase({ projects }: { projects: readonly ProjectCase[]
           ) : (
             <div className="case-blueprint">
               <span className="case-blueprint-label">Visão da solução</span>
-              <div><Smartphone aria-hidden="true" /><strong>Linhas</strong><span>Responsáveis e planos</span></div>
-              <div><Check aria-hidden="true" /><strong>Dispositivos</strong><span>Inventário atualizado</span></div>
-              <div><ArrowDownRight aria-hidden="true" /><strong>Histórico</strong><span>Movimentações rastreadas</span></div>
+              <div>
+                <Smartphone aria-hidden="true" />
+                <strong>Linhas</strong>
+                <span>Responsáveis e planos</span>
+              </div>
+              <div>
+                <Check aria-hidden="true" />
+                <strong>Dispositivos</strong>
+                <span>Inventário atualizado</span>
+              </div>
+              <div>
+                <ArrowDownRight aria-hidden="true" />
+                <strong>Histórico</strong>
+                <span>Movimentações rastreadas</span>
+              </div>
             </div>
           )}
         </div>

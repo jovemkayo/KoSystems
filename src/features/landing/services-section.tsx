@@ -3,7 +3,11 @@ import { services } from "./content";
 
 export function ServicesSection() {
   return (
-    <section id="servicos" className="section-shell services-section" aria-labelledby="services-title">
+    <section
+      id="servicos"
+      className="section-shell services-section"
+      aria-labelledby="services-title"
+    >
       <header className="section-heading split-heading">
         <span className="eyebrow">O que construímos</span>
         <div>

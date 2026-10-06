@@ -14,7 +14,9 @@ const lockups = {
 export function BrandMark({ surface, format = "lockup", className }: BrandMarkProps) {
   const isSymbol = format === "symbol";
   const style = isSymbol
-    ? ({ filter: surface === "dark" ? "brightness(0) invert(1)" : undefined } satisfies CSSProperties)
+    ? ({
+        filter: surface === "dark" ? "brightness(0) invert(1)" : undefined,
+      } satisfies CSSProperties)
     : undefined;
 
   return (

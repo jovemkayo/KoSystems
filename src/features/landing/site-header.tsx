@@ -29,7 +29,11 @@ export function SiteHeader() {
         {open ? <X /> : <Menu />}
       </button>
       <nav className="desktop-nav" aria-label="Navegação principal">
-        {links.map(([label, href]) => <a key={href} href={href}>{label}</a>)}
+        {links.map(([label, href]) => (
+          <a key={href} href={href}>
+            {label}
+          </a>
+        ))}
       </nav>
       <a className="header-cta" href={buildWhatsAppUrl()} target="_blank" rel="noreferrer">
         Solicitar orçamento <ArrowUpRight aria-hidden="true" />
@@ -37,9 +41,16 @@ export function SiteHeader() {
       {open ? (
         <nav className="mobile-nav" aria-label="Navegação móvel">
           {links.map(([label, href]) => (
-            <a key={href} href={href} onClick={() => setOpen(false)}>{label}</a>
+            <a key={href} href={href} onClick={() => setOpen(false)}>
+              {label}
+            </a>
           ))}
-          <a href={buildWhatsAppUrl()} target="_blank" rel="noreferrer" onClick={() => setOpen(false)}>
+          <a
+            href={buildWhatsAppUrl()}
+            target="_blank"
+            rel="noreferrer"
+            onClick={() => setOpen(false)}
+          >
             Solicitar orçamento <ArrowUpRight aria-hidden="true" />
           </a>
         </nav>
