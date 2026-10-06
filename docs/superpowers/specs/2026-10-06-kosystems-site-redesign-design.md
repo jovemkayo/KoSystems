@@ -72,7 +72,7 @@ The supplied brand files are the source of truth:
 - `5-em-png.png`: navy mark for light surfaces.
 - `6.jpg`: light mark for dark surfaces.
 
-The implementation will create local, web-ready assets inside the repository. The hero may use a symbol-only derivative when required by the current zoom composition; headers and footers may use the complete lockup. No runtime request may depend on `/__l5e/` or another editor-specific asset service.
+The implementation will create local, web-ready assets inside the repository. The hero may use a symbol-only derivative when required by the current zoom composition; headers and footers may use the complete lockup. No runtime request may depend on an editor-specific asset service.
 
 Image treatment must preserve the logo proportions and avoid visible background boxes where transparency is required.
 
@@ -216,7 +216,7 @@ The current working tree will be cleaned completely while preserving published G
 - remove the existing editor metadata directory;
 - remove editor-specific error-reporting hooks, globals, comments, and telemetry;
 - remove editor-specific package-manager exceptions;
-- replace all editor asset manifests and `/__l5e/` URLs with local assets;
+- replace all editor asset manifests and hosted editor URLs with local assets;
 - remove former-editor and generative-tool references from README, configuration, source, generated lockfiles, and current documentation;
 - regenerate dependency locks from standard package sources;
 - retain generic client/server error handling without editor telemetry.
@@ -265,7 +265,7 @@ Verification must include:
 - automated tests for project selection, fictional demo state changes, and WhatsApp URL generation;
 - lint and TypeScript validation;
 - production build using the independent Vite/TanStack configuration;
-- repository-wide scan confirming no current former-editor or generative-tool references or `/__l5e/` asset URLs;
+- repository-wide scan confirming no current former-editor, generative-tool, or hosted editor asset references;
 - desktop and mobile browser walkthrough of hero, navigation, projects, demonstrations, services, CTA, and footer;
 - keyboard and reduced-motion checks;
 - checks that no real customer data, client identifiers, private URLs, or secrets are present in public page content or bundled assets.
