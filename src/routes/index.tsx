@@ -4,13 +4,13 @@ import { LandingPage } from "@/features/landing/landing-page";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "KO Systems | Sistemas e software sob medida" },
+      { title: "KO Systems" },
       {
         name: "description",
         content:
           "Sistemas e softwares personalizados para organizar operações, automatizar processos e acelerar negócios.",
       },
-      { property: "og:title", content: "KO Systems | Sistemas e software sob medida" },
+      { property: "og:title", content: "KO Systems" },
       {
         property: "og:description",
         content: "Tecnologia construída a partir do desafio real da sua empresa.",
