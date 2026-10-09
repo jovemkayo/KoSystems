@@ -4,6 +4,9 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
+    "predev": "npm run build:demos",
+    "prebuild": "npm run build:demos",
+    "build:demos": "node scripts/build-original-demos.mjs",
     "dev": "vite dev",
     "build": "vite build",
     "build:dev": "vite build --mode development",

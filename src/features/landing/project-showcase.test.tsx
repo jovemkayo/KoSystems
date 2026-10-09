@@ -14,18 +14,28 @@ describe("ProjectShowcase", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     const pos = screen.getByRole("button", { name: /pdv restaurante/i });
     fireEvent.click(pos);
-    const dialog = screen.getByRole("dialog", { name: "PDV para restaurante" });
-    fireEvent.click(within(dialog).getByRole("button", { name: /adicionar suco/i }));
-    expect(within(dialog).getByText("R$ 50,00")).toBeVisible();
+    const dialog = screen.getByRole("dialog", { name: "Estalagem Restaurante" });
+    const originalFrame = within(dialog).getByTitle("Demonstração de Estalagem Restaurante");
+    expect(originalFrame).toHaveAttribute("src", "/demos/estalagem/index.html");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Reiniciar demonstração" }));
+    expect(within(dialog).getByTitle("Demonstração de Estalagem Restaurante")).not.toBe(
+      originalFrame,
+    );
     fireEvent.click(within(dialog).getByRole("button", { name: "Fechar projeto" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     await waitFor(() => expect(pos).toHaveFocus());
     fireEvent.click(pos);
-    expect(within(screen.getByRole("dialog")).getByText("R$ 42,00")).toBeVisible();
+    expect(
+      within(screen.getByRole("dialog")).getByTitle("Demonstração de Estalagem Restaurante"),
+    ).not.toBe(originalFrame);
     fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /gestão de linhas/i }));
-    expect(screen.getByRole("dialog", { name: "Gestão de linhas e dispositivos" })).toBeVisible();
+    expect(screen.getByRole("dialog", { name: "Reference" })).toBeVisible();
+    expect(screen.getByTitle("Demonstração de Reference")).toHaveAttribute(
+      "src",
+      "/demos/reference/index.html",
+    );
     expect(screen.queryByRole("button", { name: /adicionar suco/i })).not.toBeInTheDocument();
   });
 });

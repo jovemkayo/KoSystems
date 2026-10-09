@@ -19,6 +19,10 @@ dist-ssr
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars
+public/demos/
+demos/*/main.tsx
+demos/lavandine/index.html
+demos/reference/index.html
 
 # Editor directories and files
 .vscode/*

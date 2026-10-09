@@ -3,6 +3,9 @@ export type DemoKind = "pos" | "management" | "document" | "lines";
 export type ProjectCase = {
   slug: "pdv-restaurante" | "gestao-integrada" | "leitor-pedidos" | "gestao-linhas";
   segment: string;
+  clientName: string;
+  demoPath: string;
+  previewLogo: string | null;
   title: string;
   shortTitle: string;
   summary: string;
@@ -28,6 +31,9 @@ export const projects: readonly ProjectCase[] = [
   {
     slug: "pdv-restaurante",
     segment: "Alimentação",
+    clientName: "Estalagem Restaurante",
+    demoPath: "/demos/estalagem/index.html",
+    previewLogo: "/demos/estalagem/assets/img/logo-estalagem.png",
     title: "PDV para restaurante",
     shortTitle: "PDV restaurante",
     summary: "Balança, comandas e pagamentos reunidos em um fluxo rápido para a operação diária.",
@@ -41,6 +47,9 @@ export const projects: readonly ProjectCase[] = [
   {
     slug: "gestao-integrada",
     segment: "Produção e comércio",
+    clientName: "Lavandine",
+    demoPath: "/demos/lavandine/index.html",
+    previewLogo: "/demos/lavandine/assets/logo-lavandine.png",
     title: "Gestão integrada de operação",
     shortTitle: "Gestão integrada",
     summary: "Produção, estoque, vendas e financeiro conectados em uma única rotina.",
@@ -54,6 +63,9 @@ export const projects: readonly ProjectCase[] = [
   {
     slug: "leitor-pedidos",
     segment: "Distribuição de alimentos",
+    clientName: "Macaúba Hortifruti",
+    demoPath: "/demos/macauba/index.html",
+    previewLogo: null,
     title: "Leitor inteligente de pedidos",
     shortTitle: "Leitor de pedidos",
     summary: "PDFs e textos transformados em tabelas prontas para conferência e separação.",
@@ -67,6 +79,9 @@ export const projects: readonly ProjectCase[] = [
   {
     slug: "gestao-linhas",
     segment: "Serviços corporativos",
+    clientName: "Reference",
+    demoPath: "/demos/reference/index.html",
+    previewLogo: "/demos/reference/reference-symbol.png",
     title: "Gestão de linhas e dispositivos",
     shortTitle: "Gestão de linhas",
     summary: "Controle centralizado de números, aparelhos, responsáveis e movimentações.",

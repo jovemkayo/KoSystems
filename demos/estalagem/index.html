@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#174b17" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="PDV Estalagem" />
+    <title>Estalagem Restaurante - PDV</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" type="image/png" sizes="192x192" href="./assets/img/icon-192.png" />
+    <link rel="apple-touch-icon" href="./assets/img/icon-192.png" />
+    <link rel="stylesheet" href="./assets/css/main.css" />
+  </head>
+  <body>
+    <section class="auth-screen" id="authScreen">
+      <div class="auth-card">
+        <img src="./assets/img/logo-estalagem.png" alt="Estalagem Restaurante" />
+        <h1>PDV Estalagem Restaurante</h1>
+        <div class="remote-login" id="remoteLogin">
+          <input id="loginEmail" type="email" autocomplete="username" placeholder="E-mail" />
+          <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Senha" />
+        </div>
+        <button class="primary" id="loginBtn">Entrar</button>
+        <div class="auth-error" id="authError"></div>
+      </div>
+    </section>
+
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand-card">
+          <img src="./assets/img/logo-estalagem.png" alt="Estalagem Restaurante" />
+        </div>
+        <div class="app-title">PDV Estalagem Restaurante</div>
+        <div class="session-area">
+          <div class="today-pill" id="todayLabel"></div>
+          <div class="user-pill" id="currentUserLabel"></div>
+          <button class="logout-btn" id="logoutBtn">Sair</button>
+        </div>
+      </header>
+
+      <nav class="tabs" aria-label="Navegação principal">
+        <button class="tab active" data-view="balanca">Balança</button>
+        <button class="tab" data-view="caixa">Caixa</button>
+        <button class="tab" data-view="fiado">Fiado</button>
+        <button class="tab" data-view="relatorios">Relatórios</button>
+        <button class="tab" data-view="config">Configurações</button>
+      </nav>
+
+      <main>
+        <section class="view active" id="view-balanca">
+          <div class="work-grid balance-grid">
+            <section class="panel compact-panel">
+              <div class="panel-title-row">
+                <div>
+                  <p class="eyebrow">Comandas</p>
+                  <h2>Livres e abertas</h2>
+                </div>
+                <span class="counter" id="availableCount">0</span>
+              </div>
+              <div class="command-grid" id="availableCommands"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="view-caixa">
+          <div class="work-grid checkout-grid">
+            <section class="panel">
+              <div class="panel-title-row">
+                <div>
+                  <p class="eyebrow">Fechamento</p>
+                  <h2>Selecione uma ou mais comandas</h2>
+                </div>
+                <button class="ghost" id="clearSelectionBtn">Limpar</button>
+              </div>
+              <div class="open-orders" id="openOrders"></div>
+              <details class="order-add-box collapsible-box" id="orderAddBox">
+                <summary class="order-add-title">
+                  <strong>Adicionar item na comanda</strong>
+                  <span id="orderAddHint">Selecione uma comanda em aberto.</span>
+                </summary>
+                <div class="action-feedback" id="checkoutFeedback"></div>
+                <div class="current-order checkout-order-preview" id="checkoutOrderPreview"></div>
+                <div class="quick-products order-products" id="orderProducts"></div>
+              </details>
+            </section>
+
+            <section class="panel checkout-panel">
+              <div class="checkout-total">
+                <span>Total selecionado</span>
+                <strong id="checkoutTotal">R$ 0,00</strong>
+              </div>
+
+              <div class="discount-row" id="discountRow"></div>
+              <div class="manual-discount-box">
+                <input id="manualDiscountAmount" inputmode="numeric" placeholder="Desconto em R$ / crédito do cliente" />
+                <button class="secondary" id="applyManualDiscountBtn" type="button">Aplicar desconto</button>
+                <button class="ghost" id="clearManualDiscountBtn" type="button">Limpar desconto</button>
+              </div>
+              <div class="discount-status" id="discountStatus">Nenhum desconto aplicado.</div>
+
+              <div class="payment-fast">
+                <select id="paymentMethod">
+                  <option value="Dinheiro">Dinheiro</option>
+                  <option value="Débito">Débito</option>
+                  <option value="Crédito">Crédito</option>
+                  <option value="Pix">Pix</option>
+                  <option value="Voucher refeição">Voucher refeição</option>
+                  <option value="Voucher benefícios">Voucher benefícios</option>
+                  <option value="Fiado">Fiado</option>
+                </select>
+                <input id="paymentAmount" inputmode="numeric" placeholder="Restante automático" />
+                <button class="secondary" id="addPaymentBtn">Adicionar divisão</button>
+              </div>
+
+              <div class="fiado-select" id="fiadoSelectBox">
+                <select id="checkoutClient"></select>
+                <button class="ghost" id="newClientFromCheckoutBtn">Novo cliente</button>
+              </div>
+
+              <div class="payment-list" id="paymentList"></div>
+              <div class="change-box" id="changeBox">
+                <div>
+                  <span>Troco previsto</span>
+                  <strong id="changeDue">R$ 0,00</strong>
+                </div>
+                <input id="changeGiven" inputmode="numeric" placeholder="Troco entregue" />
+              </div>
+              <div class="checkout-summary" id="checkoutSummary"></div>
+
+              <div class="checkout-actions">
+                <button class="primary" id="closePaymentBtn">Fechar pagamento</button>
+                <button class="warn" id="forgiveDiffBtn">Abonar diferença restante</button>
+                <button class="secondary" id="keepChangeBtn" type="button">Cliente deixou troco</button>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="view-fiado">
+          <div class="debt-toolbar">
+            <button class="secondary" id="newClientBtn">Novo cliente</button>
+          </div>
+          <div class="work-grid debt-grid">
+            <section class="panel">
+              <details class="collapsible-box" open>
+                <summary class="panel-title-row collapsible-title">
+                <div>
+                  <p class="eyebrow">Clientes</p>
+                  <h2>Controle de fiado</h2>
+                </div>
+                </summary>
+                <div class="client-form collapsed" id="clientForm">
+                  <input id="clientName" placeholder="Nome do cliente" />
+                  <input id="clientPhone" placeholder="Telefone com DDD" />
+                  <input id="clientNote" placeholder="Identificação" />
+                  <button class="primary" id="saveClientBtn">Salvar cliente</button>
+                </div>
+                <div class="debt-search">
+                  <input id="clientSearch" placeholder="Buscar cliente por nome ou telefone" />
+                </div>
+                <div class="client-list" id="clientList"></div>
+              </details>
+            </section>
+
+            <div class="modal hidden" id="clientDetailModal" role="dialog" aria-modal="true" aria-labelledby="selectedClientTitle">
+            <section class="modal-card debt-client-modal-card">
+              <div class="panel-title-row">
+                <div>
+                  <h2 id="selectedClientTitle">Selecione um cliente</h2>
+                </div>
+                <button class="secondary small-action" id="editClientBtn">Editar</button>
+                <button class="secondary small-action" id="openDebtDetailBtn">Detalhamento</button>
+                <button class="whatsapp-icon" id="whatsappBtn" title="Chamar no WhatsApp">
+                  <img src="./assets/img/whatsapp.avif" alt="WhatsApp" />
+                </button>
+                <button class="modal-close-x" id="closeClientDetailBtn" type="button" aria-label="Fechar">×</button>
+              </div>
+
+              <div class="client-balance" id="clientBalance">Saldo: R$ 0,00</div>
+              <div class="debt-actions">
+                <div class="debt-action-box">
+                  <select id="debtPaymentMethod">
+                    <option value="Dinheiro">Dinheiro</option>
+                    <option value="Pix">Pix</option>
+                    <option value="Débito">Débito</option>
+                    <option value="Crédito">Crédito</option>
+                    <option value="Voucher refeição">Voucher refeição</option>
+                    <option value="Voucher benefícios">Voucher benefícios</option>
+                  </select>
+                  <input id="debtPaymentAmount" inputmode="numeric" placeholder="Valor recebido" />
+                  <button class="primary" id="payDebtBtn">Receber pagamento</button>
+                </div>
+                <div class="pix-box" id="debtPixBox">
+                  <div>
+                    <span>Pix do fiado</span>
+                    <strong id="debtPixAmountLabel">R$ 0,00</strong>
+                  </div>
+                  <img id="debtPixQrImage" alt="QR Code Pix" />
+                  <textarea id="debtPixCopyCode" rows="3" readonly></textarea>
+                  <button class="secondary" id="copyDebtPixBtn" type="button">Copiar código Pix</button>
+                  <p id="debtPixHint">Selecione Pix para gerar o QR Code.</p>
+                </div>
+              </div>
+              <div class="debt-history" id="debtHistory"></div>
+            </section>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-relatorios">
+          <div class="report-layout">
+            <section class="panel cash-panel">
+              <div>
+                <p class="eyebrow">Caixa do dia</p>
+                <h2>Caixa inicial</h2>
+                <strong class="cash-start-display" id="cashStartDisplay">R$ 0,00</strong>
+              </div>
+              <div class="cash-start-row">
+                <input id="cashStart" inputmode="numeric" placeholder="R$ 0,00" />
+                <button class="primary" id="saveCashStartBtn">Salvar caixa</button>
+              </div>
+            </section>
+
+            <section class="panel report-filter">
+              <div>
+                <p class="eyebrow">Relatório financeiro</p>
+                <h2>Filtrar por período</h2>
+              </div>
+              <div class="date-row">
+                <label>Data inicial<input id="reportStart" type="date" /></label>
+                <label>Data final<input id="reportEnd" type="date" /></label>
+                <button class="secondary" id="generateAccountantPdfBtn">Gerar relatório mensal</button>
+                <button class="secondary" id="generateCashSummaryBtn">Gerar resumo caixa</button>
+              </div>
+            </section>
+
+            <section class="report-cards" id="reportCards"></section>
+            <details class="panel report-collapse" open>
+              <summary class="panel-title-row">
+                <div>
+                  <p class="eyebrow">Empresas</p>
+                  <h2>Detalhamento de descontos</h2>
+                </div>
+              </summary>
+              <div id="companyReportDetail"></div>
+            </details>
+            <details class="panel report-collapse" open>
+              <summary class="panel-title-row">
+                <div>
+                  <p class="eyebrow">Movimento</p>
+                  <h2>Vendas do período</h2>
+                </div>
+              </summary>
+              <div class="sales-table" id="salesTable"></div>
+            </details>
+            <details class="panel report-collapse" open>
+              <summary class="panel-title-row">
+                <div>
+                  <p class="eyebrow">Auditoria</p>
+                  <h2>Itens removidos</h2>
+                </div>
+              </summary>
+              <div class="sales-table" id="removalTable"></div>
+            </details>
+          </div>
+        </section>
+<section class="view" id="view-config">
+          <div class="work-grid config-grid">
+            <section class="panel">
+              <div class="panel-title-row">
+                <div>
+                  <p class="eyebrow">Produtos</p>
+                  <h2>Cardápio editável amplo</h2>
+                </div>
+                <button class="secondary" id="saveProductBtn">Salvar produto</button>
+              </div>
+              <div class="form-grid">
+                <input id="productName" placeholder="Nome completo do produto" />
+                <input id="productPrice" inputmode="numeric" placeholder="Valor" />
+                <select id="productCategory">
+                  <option value="outros">Outros</option>
+                  <option value="principal">Marmitex/Feijoada</option>
+                  <option value="bebidas">Bebidas</option>
+                  <option value="doces">Doces</option>
+                </select>
+                <input id="productImage" type="file" accept="image/*" aria-label="Imagem do produto" />
+              </div>
+              <div class="product-list" id="productList"></div>
+            </section>
+            <section class="panel">
+              <div class="panel-title-row">
+                <div>
+                  <p class="eyebrow">Operação</p>
+                  <h2>Comandas</h2>
+                </div>
+              </div>
+              <div class="form-grid small-form">
+                <input id="commandMax" type="number" min="10" max="200" />
+                <button class="primary" id="saveCommandMaxBtn">Salvar quantidade</button>
+              </div>
+              <div class="company-config">
+                <div class="panel-title-row soft-title">
+                  <div>
+                    <p class="eyebrow">Refeição</p>
+                    <h2>À vontade</h2>
+                  </div>
+                  <button class="secondary" id="saveBuffetPriceBtn">Salvar valor</button>
+                </div>
+                <div class="form-grid small-form">
+                  <input id="buffetPrice" inputmode="numeric" placeholder="Valor do à vontade" />
+                </div>
+              </div>
+              <div class="company-config">
+                <div class="panel-title-row soft-title">
+                  <div>
+                    <p class="eyebrow">Pix</p>
+                    <h2>Chave de recebimento</h2>
+                  </div>
+                  <button class="secondary" id="savePixKeyBtn">Salvar Pix</button>
+                </div>
+                <div class="form-grid small-form">
+                  <input id="pixKey" placeholder="Chave Pix única do restaurante" />
+                </div>
+              </div>
+              <div class="company-config">
+                <div class="panel-title-row soft-title">
+                  <div>
+                    <p class="eyebrow">Empresas</p>
+                    <h2>Descontos</h2>
+                  </div>
+                  <button class="secondary" id="saveCompanyBtn">Adicionar empresa</button>
+                </div>
+                <div class="form-grid company-form">
+                  <input id="companyName" placeholder="Nome da empresa" />
+                  <input id="companyDiscount" inputmode="decimal" placeholder="Desconto %" />
+                  <label class="file-label">
+                    Imagem
+                    <input id="companyLogo" type="file" accept="image/*" />
+                  </label>
+                </div>
+                <div class="company-list" id="companyList"></div>
+              </div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="modal hidden" id="removalModal" role="dialog" aria-modal="true" aria-labelledby="removalModalTitle">
+      <div class="modal-card">
+        <p class="eyebrow">Segurança do caixa</p>
+        <h2 id="removalModalTitle">Motivo da remoção</h2>
+        <p id="removalModalText" class="modal-text"></p>
+        <textarea id="removalReason" rows="4" placeholder="Explique por que este item está sendo removido"></textarea>
+        <p class="form-error" id="removalError"></p>
+        <div class="modal-actions">
+          <button class="secondary" id="cancelRemovalBtn">Cancelar</button>
+          <button class="danger-btn" id="confirmRemovalBtn">Remover item</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal hidden" id="cashSummaryModal" role="dialog" aria-modal="true" aria-labelledby="cashSummaryModalTitle">
+      <div class="modal-card report-modal-card">
+        <button class="modal-close-x" id="closeCashSummaryBtn" type="button" aria-label="Fechar">×</button>
+        <h2 id="cashSummaryModalTitle">Resumo do caixa</h2>
+        <p id="cashSummaryModalPeriod" class="modal-text"></p>
+        <div class="summary-table" id="cashSummaryModalBody"></div>
+      </div>
+    </div>
+
+    <div class="modal hidden" id="commandFocusModal" role="dialog" aria-modal="true" aria-labelledby="commandFocusTitle">
+      <div class="modal-card command-focus-card">
+        <div class="panel-title-row">
+          <div>
+            <p class="eyebrow">Comanda selecionada</p>
+            <h2 id="commandFocusTitle">Comanda</h2>
+          </div>
+          <button class="modal-close-x" id="closeCommandFocusBtn" type="button" aria-label="Fechar">×</button>
+        </div>
+        <div class="action-feedback" id="commandFocusFeedback"></div>
+        <div class="money-entry command-focus-entry">
+          <input id="scaleValue" inputmode="numeric" autocomplete="off" placeholder="R$ 0,00" />
+          <button class="primary" id="addMealBtn">Adicionar refeição</button>
+          <button class="secondary" id="addBuffetBtn">À vontade</button>
+        </div>
+        <div class="number-pad command-focus-pad" aria-label="Teclado do valor da balança">
+          <button data-key="1">1</button>
+          <button data-key="2">2</button>
+          <button data-key="3">3</button>
+          <button data-key="4">4</button>
+          <button data-key="5">5</button>
+          <button data-key="6">6</button>
+          <button data-key="7">7</button>
+          <button data-key="8">8</button>
+          <button data-key="9">9</button>
+          <button data-key="clear">Limpar</button>
+          <button data-key="0">0</button>
+          <button data-key="back">⌫</button>
+        </div>
+        <div class="command-focus-total" id="commandFocusTotal">R$ 0,00</div>
+        <div class="current-order" id="commandFocusItems"></div>
+        <div class="quick-products command-focus-products" id="commandFocusProducts"></div>
+      </div>
+    </div>
+
+    <div class="modal hidden" id="pixModal" role="dialog" aria-modal="true" aria-labelledby="pixModalTitle">
+      <div class="modal-card pix-modal-card">
+        <button class="modal-close-x" id="closePixModalBtn" type="button" aria-label="Fechar">×</button>
+        <h2 id="pixModalTitle">Pix da comanda</h2>
+        <input id="pixModalAmountInput" inputmode="numeric" placeholder="R$ 0,00" />
+        <img id="pixModalQrImage" alt="QR Code Pix" />
+        <textarea id="pixModalCopyCode" rows="3" readonly></textarea>
+        <p id="pixModalHint" class="modal-text"></p>
+        <div class="modal-actions">
+          <button class="secondary" id="copyPixModalBtn" type="button">Copiar código</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal hidden" id="debtDetailModal" role="dialog" aria-modal="true" aria-labelledby="debtDetailModalTitle">
+      <div class="modal-card debt-detail-modal-card">
+        <button class="modal-close-x" id="closeDebtDetailBtn" type="button" aria-label="Fechar">×</button>
+        <h2 id="debtDetailModalTitle">Detalhamento do fiado</h2>
+        <p id="debtDetailClientName" class="modal-text"></p>
+        <div class="debt-detail-filters">
+          <label>
+            <span>Início</span>
+            <input id="debtDetailStart" type="date" />
+          </label>
+          <label>
+            <span>Fim</span>
+            <input id="debtDetailEnd" type="date" />
+          </label>
+        </div>
+        <div class="debt-detail-preview" id="debtDetailPreview"></div>
+        <div class="modal-actions">
+          <button class="secondary" id="downloadDebtImageBtn" type="button">Gerar imagem</button>
+          <button class="primary" id="sendDebtWhatsappBtn" type="button">WhatsApp</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="./assets/js/supabase-config.js"></script>
+    <script src="./assets/js/app.js"></script>
+  </body>
+</html>
