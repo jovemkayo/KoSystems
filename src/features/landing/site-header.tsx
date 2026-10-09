@@ -1,8 +1,5 @@
 import { useState } from "react";
-import { ArrowUpRight, Menu, X } from "lucide-react";
-
-import { BrandMark } from "@/components/brand/brand-mark";
-import { buildWhatsAppUrl } from "./contact";
+import { Menu, X } from "lucide-react";
 
 const links = [
   ["Projetos", "#projetos"],
@@ -16,9 +13,6 @@ export function SiteHeader() {
 
   return (
     <header className="site-header">
-      <a className="header-brand" href="#inicio" aria-label="KO Systems — início">
-        <BrandMark surface="light" className="header-logo" />
-      </a>
       <button
         type="button"
         className="menu-toggle"
@@ -35,9 +29,6 @@ export function SiteHeader() {
           </a>
         ))}
       </nav>
-      <a className="header-cta" href={buildWhatsAppUrl()} target="_blank" rel="noreferrer">
-        Solicitar orçamento <ArrowUpRight aria-hidden="true" />
-      </a>
       {open ? (
         <nav className="mobile-nav" aria-label="Navegação móvel">
           {links.map(([label, href]) => (
@@ -45,14 +36,6 @@ export function SiteHeader() {
               {label}
             </a>
           ))}
-          <a
-            href={buildWhatsAppUrl()}
-            target="_blank"
-            rel="noreferrer"
-            onClick={() => setOpen(false)}
-          >
-            Solicitar orçamento <ArrowUpRight aria-hidden="true" />
-          </a>
         </nav>
       ) : null}
     </header>

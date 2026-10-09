@@ -26,7 +26,7 @@ describe("LandingPage", () => {
     expect(screen.getByRole("heading", { name: "Sistemas de gestão e operação" })).toBeVisible();
     expect(screen.getByRole("heading", { name: "Publicar e evoluir" })).toBeVisible();
     expect(screen.getAllByRole("link", { name: /orçamento/i }).length).toBeGreaterThan(1);
-    expect(screen.getAllByRole("img", { name: "KO Systems" })).toHaveLength(2);
+    expect(screen.getByRole("img", { name: "KO Systems" })).toBeVisible();
     expect(screen.queryByRole("link", { name: /e-mail|github/i })).not.toBeInTheDocument();
   });
 });

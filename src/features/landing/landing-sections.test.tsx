@@ -17,10 +17,6 @@ describe("seções institucionais", () => {
     for (const label of ["Projetos", "Serviços", "Processo", "Contato"]) {
       expect(screen.getByRole("link", { name: label })).toBeVisible();
     }
-    expect(screen.getByRole("link", { name: /solicitar orçamento/i })).toHaveAttribute(
-      "href",
-      expect.stringContaining("wa.me/5511930086602"),
-    );
   });
 
   it("mostra os cinco serviços e as quatro etapas em ordem", () => {

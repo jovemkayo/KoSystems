@@ -21,7 +21,7 @@ export function LandingPage() {
         scrollLength={2.4}
         fontFamily={'"Sora", "Arial Black", sans-serif'}
         fontWeight={700}
-        enterLabel="Ver projetos"
+        minimalCaption
         style={{
           "--gp-paper": "var(--color-background)",
           "--gp-ink": "var(--color-primary)",
@@ -30,12 +30,11 @@ export function LandingPage() {
         }}
       >
         <div className="hero-reveal">
-          <span className="eyebrow light">Software sob medida</span>
           <h1>Sistemas que transformam desafios reais em operações melhores.</h1>
           <div className="hero-reveal-bottom">
             <p>
               Da ideia à publicação, criamos soluções digitais alinhadas à forma como sua empresa
-              trabalha — e preparadas para continuar evoluindo.
+              trabalha, com estrutura para continuar evoluindo.
             </p>
             <a href={buildWhatsAppUrl()} target="_blank" rel="noreferrer">
               Solicitar orçamento <ArrowRight aria-hidden="true" />

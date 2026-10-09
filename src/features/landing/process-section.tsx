@@ -8,7 +8,6 @@ export function ProcessSection() {
       aria-labelledby="process-title"
     >
       <header className="section-heading">
-        <span className="eyebrow">Como trabalhamos</span>
         <h2 id="process-title">Do problema à solução em operação.</h2>
       </header>
       <ol className="process-grid">

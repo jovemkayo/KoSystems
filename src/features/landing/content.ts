@@ -1,4 +1,4 @@
-export type DemoKind = "pos" | "management" | "document" | null;
+export type DemoKind = "pos" | "management" | "document" | "lines";
 
 export type ProjectCase = {
   slug: "pdv-restaurante" | "gestao-integrada" | "leitor-pedidos" | "gestao-linhas";
@@ -30,12 +30,12 @@ export const projects: readonly ProjectCase[] = [
     segment: "Alimentação",
     title: "PDV para restaurante",
     shortTitle: "PDV restaurante",
-    summary: "Pedidos, mesas e fechamento reunidos em um fluxo rápido para a operação diária.",
+    summary: "Balança, comandas e pagamentos reunidos em um fluxo rápido para a operação diária.",
     problem:
-      "A equipe precisava reduzir anotações dispersas e acompanhar cada pedido sem perder o ritmo do atendimento.",
+      "A equipe precisava conectar a pesagem dos pratos ao fechamento das comandas, com controle claro dos pagamentos.",
     solution:
-      "Um ponto de venda pensado para salão e caixa, com visão clara do pedido até o pagamento.",
-    capabilities: ["Mesas e comandas", "Andamento dos pedidos", "Fechamento de caixa"],
+      "Um ponto de venda com balança, comandas e caixa, que acompanha o consumo até o pagamento.",
+    capabilities: ["Pesagem e comandas", "Divisão de pagamentos", "Fechamento de caixa"],
     demoKind: "pos",
   },
   {
@@ -79,7 +79,7 @@ export const projects: readonly ProjectCase[] = [
       "Inventário de aparelhos",
       "Histórico de movimentações",
     ],
-    demoKind: null,
+    demoKind: "lines",
   },
 ];
 

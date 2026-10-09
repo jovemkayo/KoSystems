@@ -27,6 +27,7 @@ export type GlyphPortalProps = {
   fontWeight?: number;
   annotations?: boolean;
   enterLabel?: string;
+  minimalCaption?: boolean;
   className?: string;
   style?: GlyphPortalStyle;
   onProgress?: (progress: number) => void;
@@ -119,6 +120,7 @@ export default function GlyphPortal({
   fontWeight = 900,
   annotations = false,
   enterLabel = "Enter section",
+  minimalCaption = false,
   className,
   style,
   onProgress,
@@ -595,7 +597,7 @@ export default function GlyphPortal({
             />
           ))}
         </div>
-        <label data-gp-touch-picker>
+        <label data-gp-touch-picker style={minimalCaption ? { display: "none" } : undefined}>
           <span>Letra de entrada</span>
           <select data-gp-select defaultValue="" aria-label="Escolha uma letra">
             <option value="" disabled>
@@ -609,13 +611,21 @@ export default function GlyphPortal({
           </select>
         </label>
         {front ? <div data-gp-front>{front}</div> : null}
-        <div data-gp-caption>
+        <div data-gp-caption style={minimalCaption ? { justifyContent: "center" } : undefined}>
           <span data-gp-hint>
-            {interactive ? "Role para entrar." : annotations ? "Uma passagem pela marca" : ""}
+            {minimalCaption
+              ? "Role para ver mais"
+              : interactive
+                ? "Role para entrar."
+                : annotations
+                  ? "Uma passagem pela marca"
+                  : ""}
           </span>
-          <a data-gp-enter href={`#${uid}-content`}>
-            {enterLabel} <span aria-hidden="true">↘</span>
-          </a>
+          {!minimalCaption ? (
+            <a data-gp-enter href={`#${uid}-content`}>
+              {enterLabel} <span aria-hidden="true">↘</span>
+            </a>
+          ) : null}
         </div>
         <div id={`${uid}-content`} data-gp-content>
           {children ?? (
