@@ -347,14 +347,25 @@ h2 {
     flex-direction: column;
   }
 
-  .view,
-  .view.active {
-    display: block;
-  }
+  .view { grid-template-columns: minmax(0, 1fr); }
 
   .panel {
     margin-bottom: 16px;
   }
+}
+
+@media (max-width: 620px) {
+  .topbar { padding: 16px; gap: 12px; }
+  h1 { font-size: 24px; }
+  .tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 10px 12px; }
+  .tab { min-width: 0; min-height: 44px; padding: 8px 4px; font-size: 12px; }
+  .view { padding: 16px 12px; gap: 16px; }
+  .panel { min-width: 0; padding: 14px; margin-bottom: 0; }
+  .field input, .field textarea, .table-input { font-size: 16px; }
+  .field textarea { min-height: 180px; }
+  .actions > * { flex: 1; min-height: 44px; }
+  .table-wrap { max-width: 100%; overscroll-behavior-x: contain; }
+  .section-title strong, .hint { overflow-wrap: anywhere; }
 }
 
 @page {

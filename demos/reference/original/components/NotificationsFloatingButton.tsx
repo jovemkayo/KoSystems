@@ -117,7 +117,7 @@ export function NotificationsFloatingButton() {
       <SheetTrigger asChild>
         <Button
           size="icon"
-          className="fixed bottom-20 right-4 z-50 h-12 w-12 rounded-full shadow-lg md:bottom-6 md:right-6"
+          className="fixed bottom-[calc(120px+env(safe-area-inset-bottom))] right-4 z-50 h-12 w-12 rounded-full shadow-lg lg:bottom-6 lg:right-6"
           aria-label="Abrir notificações"
         >
           <Bell className="h-5 w-5" />

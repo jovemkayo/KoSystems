@@ -79,13 +79,21 @@ export function ProjectShowcase({ projects }: { projects: readonly ProjectCase[]
               }}
             >
               <div className="project-modal-bar">
-                <span>Demonstração interativa · Dados fictícios</span>
+                <span className="project-modal-context">
+                  Demonstração interativa · Dados fictícios
+                </span>
+                <span className="project-modal-mobile-title" aria-hidden="true">
+                  {selected.clientName}
+                  <small>Dados fictícios</small>
+                </span>
                 <button
                   type="button"
                   className="project-demo-reset"
+                  aria-label="Reiniciar demonstração"
+                  title="Reiniciar demonstração"
                   onClick={() => setDemoRevision((revision) => revision + 1)}
                 >
-                  <RotateCcw aria-hidden="true" /> Reiniciar demonstração
+                  <RotateCcw aria-hidden="true" /> <span>Reiniciar demonstração</span>
                 </button>
                 <Dialog.Close className="project-modal-close" aria-label="Fechar projeto">
                   <X aria-hidden="true" />

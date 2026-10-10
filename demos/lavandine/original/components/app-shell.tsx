@@ -25,17 +25,7 @@ const nav = [
   { to: "/relatorios", label: "Relatórios", icon: BarChart3 },
 ] as const;
 
-const mobileNav = nav.filter((item) =>
-  [
-    "/",
-    "/compras",
-    "/estoque",
-    "/producao",
-    "/produtos",
-    "/clientes",
-    "/vendas",
-  ].includes(item.to),
-);
+const mobileNav = nav;
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { configurado, sessao, sair } = useAuth();
@@ -106,17 +96,17 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="min-w-0 flex-1 px-4 pb-28 pt-4 md:px-8 md:pb-10 md:pt-8">
+        <main className="min-w-0 flex-1 px-4 pb-36 pt-4 md:px-8 md:pb-10 md:pt-8">
           <div className="mx-auto w-full max-w-6xl">{children}</div>
         </main>
 
-        <nav className="fixed inset-x-0 bottom-0 z-30 flex overflow-x-auto border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+        <nav aria-label="Navegação mobile" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
           {mobileNav.map(({ to, label, icon: Icon }) => (
             <Link
               key={to}
               to={to}
               activeOptions={{ exact: to === "/" }}
-              className="flex min-w-[4.8rem] flex-1 flex-col items-center gap-1 py-2.5 text-[11px] text-muted-foreground"
+              className="flex min-w-0 flex-col items-center gap-1 py-2.5 text-[11px] text-muted-foreground"
               activeProps={{ className: "text-primary font-medium" }}
             >
               <Icon className="size-5" />
