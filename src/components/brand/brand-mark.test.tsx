@@ -16,7 +16,7 @@ describe("BrandMark", () => {
     rerender(<BrandMark surface="dark" format="lockup" />);
     expect(screen.getByRole("img", { name: "KO Systems" })).toHaveAttribute(
       "src",
-      "/brand/ko-systems-light.jpg",
+      "/brand/ko-systems-navy.png",
     );
   });
 

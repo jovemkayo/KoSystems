@@ -11,7 +11,6 @@ export function ServicesSection() {
       <header className="section-heading">
         <div>
           <h2 id="services-title">Tecnologia aplicada ao jeito que sua empresa trabalha.</h2>
-          <p>Da primeira ideia à evolução contínua, cada solução nasce do contexto da operação.</p>
         </div>
       </header>
       <div className="services-list">

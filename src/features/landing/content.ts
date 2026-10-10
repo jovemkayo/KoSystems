@@ -65,7 +65,7 @@ export const projects: readonly ProjectCase[] = [
     segment: "Distribuição de alimentos",
     clientName: "Macaúba Hortifruti",
     demoPath: "/demos/macauba/index.html",
-    previewLogo: null,
+    previewLogo: "/brand/macauba-hortifruti.png",
     title: "Leitor inteligente de pedidos",
     shortTitle: "Leitor de pedidos",
     summary: "PDFs e textos transformados em tabelas prontas para conferência e separação.",
@@ -160,4 +160,6 @@ export const company = {
   cnpj: "69.208.733/0001-12",
   instagramHandle: "@ko.systems",
   instagramUrl: "https://www.instagram.com/ko.systems/",
+  linkedinUrl: "https://www.linkedin.com/in/kayo-de-oliveira-marques-2a2b21325/",
+  githubUrl: "https://github.com/jovemkayo",
 } as const;

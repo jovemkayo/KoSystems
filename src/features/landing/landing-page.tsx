@@ -43,8 +43,8 @@ export function LandingPage() {
         </div>
       </GlyphPortal>
       <ProjectShowcase projects={projects} />
-      <ServicesSection />
       <ProcessSection />
+      <ServicesSection />
       <ContactSection />
       <SiteFooter />
     </main>

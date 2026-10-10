@@ -27,6 +27,7 @@ describe("LandingPage", () => {
     expect(screen.getByRole("heading", { name: "Publicar e evoluir" })).toBeVisible();
     expect(screen.getAllByRole("link", { name: /orçamento/i }).length).toBeGreaterThan(1);
     expect(screen.getByRole("img", { name: "KO Systems" })).toBeVisible();
-    expect(screen.queryByRole("link", { name: /e-mail|github/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "GitHub" })).toBeVisible();
+    expect(screen.queryByRole("link", { name: /e-mail/i })).not.toBeInTheDocument();
   });
 });

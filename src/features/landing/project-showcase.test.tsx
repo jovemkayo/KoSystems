@@ -9,6 +9,16 @@ import { ProjectShowcase } from "./project-showcase";
 afterEach(cleanup);
 
 describe("ProjectShowcase", () => {
+  it("identifica os quatro projetos por logos com botões acessíveis", () => {
+    render(<ProjectShowcase projects={projects} />);
+    const buttons = screen.getAllByRole("button");
+    expect(buttons).toHaveLength(4);
+    for (const button of buttons) {
+      expect(button).toHaveAccessibleName();
+      expect(button.querySelectorAll("img")).toHaveLength(1);
+      expect(button).toHaveAttribute("aria-haspopup", "dialog");
+    }
+  });
   it("abre o projeto escolhido e descarta o estado da demonstração ao fechar", async () => {
     render(<ProjectShowcase projects={projects} />);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();

@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { ArrowDownRight, RotateCcw, X } from "lucide-react";
+import { RotateCcw, X } from "lucide-react";
 
 import type { ProjectCase } from "./content";
 
@@ -25,7 +25,6 @@ export function ProjectShowcase({ projects }: { projects: readonly ProjectCase[]
       >
         <header className="section-heading">
           <h2 id="projects-title">Sistemas que resolvem o trabalho real.</h2>
-          <p>Projetos em uso, com as telas originais e dados fictícios para você experimentar.</p>
         </header>
 
         <div className="project-grid">
@@ -35,6 +34,7 @@ export function ProjectShowcase({ projects }: { projects: readonly ProjectCase[]
                 key={project.slug}
                 type="button"
                 className="project-card"
+                aria-label={`${project.clientName} · ${project.shortTitle}`}
                 aria-haspopup="dialog"
                 onClick={(event) => {
                   opener.current = event.currentTarget;
@@ -43,11 +43,6 @@ export function ProjectShowcase({ projects }: { projects: readonly ProjectCase[]
                 }}
               >
                 <span className="project-preview" aria-hidden="true">
-                  <span className="preview-window-bar">
-                    <i />
-                    <i />
-                    <i />
-                  </span>
                   {project.previewLogo ? (
                     <img
                       className="project-client-logo"
@@ -59,13 +54,6 @@ export function ProjectShowcase({ projects }: { projects: readonly ProjectCase[]
                     <span className="project-client-wordmark">{project.clientName}</span>
                   )}
                 </span>
-                <span className="project-card-copy">
-                  <span className="project-segment">{project.segment}</span>
-                  <strong>{project.clientName}</strong>
-                  <span className="project-card-system">{project.shortTitle}</span>
-                  <span>{project.summary}</span>
-                </span>
-                <ArrowDownRight className="project-arrow" aria-hidden="true" />
               </button>
             );
           })}

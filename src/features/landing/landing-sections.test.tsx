@@ -14,9 +14,11 @@ afterEach(cleanup);
 describe("seções institucionais", () => {
   it("oferece navegação e contato direto", () => {
     render(<SiteHeader />);
-    for (const label of ["Projetos", "Serviços", "Processo", "Contato"]) {
+    for (const label of ["Projetos", "Serviços", "Contato"]) {
       expect(screen.getByRole("link", { name: label })).toBeVisible();
     }
+    expect(screen.getAllByRole("link")).toHaveLength(3);
+    expect(screen.getByRole("link", { name: "Serviços" })).toHaveAttribute("href", "#servicos");
   });
 
   it("mostra os cinco serviços e as quatro etapas em ordem", () => {
@@ -36,7 +38,22 @@ describe("seções institucionais", () => {
       </>,
     );
     expect(screen.getByText("69.208.733/0001-12")).toBeVisible();
-    expect(screen.getByRole("link", { name: "@ko.systems" })).toBeVisible();
-    expect(screen.queryByRole("link", { name: /e-mail|github/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Instagram" })).toHaveAttribute(
+      "href",
+      "https://www.instagram.com/ko.systems/",
+    );
+    expect(screen.getByRole("link", { name: "LinkedIn" })).toHaveAttribute(
+      "href",
+      "https://www.linkedin.com/in/kayo-de-oliveira-marques-2a2b21325/",
+    );
+    expect(screen.getByRole("link", { name: "GitHub" })).toHaveAttribute(
+      "href",
+      "https://github.com/jovemkayo",
+    );
+    expect(screen.getByRole("link", { name: "WhatsApp" })).toHaveAttribute(
+      "href",
+      expect.stringContaining("https://wa.me/5511930086602"),
+    );
+    expect(screen.getByRole("link", { name: "Sobre mim" })).toHaveAttribute("href", "/sobre");
   });
 });

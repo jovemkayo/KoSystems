@@ -8,16 +8,17 @@ type BrandMarkProps = {
 
 const lockups = {
   light: "/brand/ko-systems-navy.png",
-  dark: "/brand/ko-systems-light.jpg",
+  dark: "/brand/ko-systems-navy.png",
 } as const;
 
 export function BrandMark({ surface, format = "lockup", className }: BrandMarkProps) {
   const isSymbol = format === "symbol";
-  const style = isSymbol
-    ? ({
-        filter: surface === "dark" ? "brightness(0) invert(1)" : undefined,
-      } satisfies CSSProperties)
-    : undefined;
+  const style =
+    surface === "dark"
+      ? ({
+          filter: "brightness(0) invert(1)",
+        } satisfies CSSProperties)
+      : undefined;
 
   return (
     <img
