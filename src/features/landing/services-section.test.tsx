@@ -13,7 +13,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-it("moves the single focused service within the list when its internal viewport scrolls", async () => {
+it("moves the focused service with page scrolling without requiring scrolling inside the list", async () => {
   let offset = 0;
   vi.stubGlobal("innerHeight", 800);
   vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) =>
@@ -23,6 +23,19 @@ it("moves the single focused service within the list when its internal viewport 
   vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (
     this: HTMLElement,
   ) {
+    if (this.classList.contains("services-section")) {
+      return {
+        top: -offset,
+        bottom: 2000 - offset,
+        height: 2000,
+        left: 0,
+        right: 600,
+        width: 600,
+        x: 0,
+        y: -offset,
+        toJSON() {},
+      };
+    }
     if (this.classList.contains("services-list")) {
       return {
         top: 100,
@@ -37,7 +50,7 @@ it("moves the single focused service within the list when its internal viewport 
       };
     }
     const index = Number(this.getAttribute("data-service-index"));
-    const top = 220 + index * 240 - offset;
+    const top = this.classList.contains("services-track") ? 0 : 220 + index * 240;
     return {
       top,
       bottom: top + 120,
@@ -51,20 +64,19 @@ it("moves the single focused service within the list when its internal viewport 
     };
   });
   const { container } = render(<ServicesSection />);
-  const list = container.querySelector(".services-list")!;
   const rows = container.querySelectorAll("article");
   expect([...rows].filter((row) => row.getAttribute("data-focused") === "true")).toEqual([rows[0]]);
 
-  offset = 240;
-  act(() => list.dispatchEvent(new Event("scroll")));
+  offset = 600;
+  act(() => window.dispatchEvent(new Event("scroll")));
   await waitFor(() => {
     expect([...rows].filter((row) => row.getAttribute("data-focused") === "true")).toEqual([
-      rows[1],
+      rows[2],
     ]);
   });
 
-  offset = 960;
-  act(() => list.dispatchEvent(new Event("scroll")));
+  offset = 1200;
+  act(() => window.dispatchEvent(new Event("scroll")));
   await waitFor(() => {
     expect([...rows].filter((row) => row.getAttribute("data-focused") === "true")).toEqual([
       rows[4],
