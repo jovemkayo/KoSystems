@@ -210,7 +210,7 @@ a { color: inherit; }
 .section-heading h2, .contact-copy h2 { margin: 20px 0 0; font-size: clamp(38px, 5.5vw, 72px); line-height: 1.04; letter-spacing: -.045em; text-wrap: balance; }
 .section-heading > p, .split-heading p { max-width: 640px; margin: 24px 0 0; color: #657087; font-size: 17px; line-height: 1.7; }
 
-.projects-section { width: 100%; max-width: none; min-height: 100svh; display: flex; flex-direction: column; justify-content: flex-start; padding-block: 40px 64px; scroll-margin-top: 64px; }
+.projects-section { width: 100%; max-width: none; min-height: 110svh; display: flex; flex-direction: column; justify-content: flex-start; padding-block: clamp(88px, 10svh, 140px) 80px; scroll-margin-top: 64px; }
 .projects-section > .section-heading, .projects-section > .project-grid { width: min(1600px, 100%); max-width: none; align-self: center; }
 .projects-section .section-heading h2 { max-width: 900px; font-size: clamp(38px, 4.8vw, 64px); margin: 0; }
 .project-grid { flex: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: clamp(40px, 5svh, 64px); }
@@ -496,7 +496,7 @@ a { color: inherit; }
   .footer-social { grid-column: 1; }
 }
 @media (max-width: 620px) {
-  .projects-section { padding-block: 32px 44px; }
+  .projects-section { padding-block: 80px 64px; }
   .projects-section .section-heading h2 { font-size: clamp(30px, 8.2vw, 38px); line-height: 1.12; }
   .projects-section .section-heading > p { margin-top: 16px; font-size: 15px; line-height: 1.6; text-wrap: balance; }
   .project-grid { flex: none; grid-template-columns: 1fr; gap: 18px; margin-top: 28px; }
