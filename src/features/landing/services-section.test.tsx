@@ -13,9 +13,13 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-it.each([800, 844, 667])(
+it.each([
+  [800, 680, 1200, 420],
+  [844, 662.4, 1156, 415.6],
+  [667, 733.2, 1333, 433.3],
+])(
   "moves focus forward and backward with page scrolling at viewport height %i",
-  async (viewportHeight) => {
+  async (viewportHeight, midpoint, end, firstStep) => {
     let offset = 0;
     vi.stubGlobal("innerHeight", viewportHeight);
     vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) =>
@@ -71,7 +75,16 @@ it.each([800, 844, 667])(
       rows[0],
     ]);
 
-    offset = (2000 - viewportHeight) / 2;
+    // Once the panel enters completely, give it a short stationary reading
+    // interval before the next page scroll starts moving the wheel.
+    offset = 80;
+    await act(async () => {
+      window.dispatchEvent(new Event("scroll"));
+      await new Promise((resolve) => window.setTimeout(resolve, 20));
+    });
+    expect((rows[0] as HTMLElement).style.getPropertyValue("--service-y")).toBe("0px");
+
+    offset = midpoint;
     act(() => window.dispatchEvent(new Event("scroll")));
     await waitFor(() => {
       expect([...rows].filter((row) => row.getAttribute("data-focused") === "true")).toEqual([
@@ -85,7 +98,7 @@ it.each([800, 844, 667])(
       Number((rows[3] as HTMLElement).style.getPropertyValue("--service-angle").replace("deg", "")),
     ).toBeLessThan(0);
 
-    offset = 2000 - viewportHeight;
+    offset = end;
     act(() => window.dispatchEvent(new Event("scroll")));
     await waitFor(() => {
       expect([...rows].filter((row) => row.getAttribute("data-focused") === "true")).toEqual([
@@ -93,7 +106,7 @@ it.each([800, 844, 667])(
       ]);
     });
 
-    offset = (2000 - viewportHeight) / 4;
+    offset = firstStep;
     act(() => window.dispatchEvent(new Event("scroll")));
     await waitFor(() => {
       expect([...rows].filter((row) => row.getAttribute("data-focused") === "true")).toEqual([

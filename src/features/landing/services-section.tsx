@@ -21,9 +21,14 @@ export function ServicesSection() {
       // Use the sticky panel's layout height, not transformed text geometry or
       // Safari's changing visual viewport as its address bar opens and closes.
       const panelHeight = sticky.offsetHeight || window.innerHeight;
+      // Let the full panel settle into view before rotating its services.
+      const entryPause = panelHeight * 0.2;
       const progress = Math.max(
         0,
-        Math.min(1, -bounds.top / Math.max(1, bounds.height - panelHeight)),
+        Math.min(
+          1,
+          (-bounds.top - entryPause) / Math.max(1, bounds.height - panelHeight - entryPause),
+        ),
       );
       const position = progress * (rows.length - 1);
       const radius = Math.max(210, list.clientHeight * 0.55);
