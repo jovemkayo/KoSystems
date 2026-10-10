@@ -25,7 +25,8 @@ export function ProjectShowcase({ projects }: { projects: readonly ProjectCase[]
         aria-labelledby="projects-title"
       >
         <header className="section-heading">
-          <h2 id="projects-title">Sistemas que resolvem o trabalho real.</h2>
+          <h2 id="projects-title">Projetos que já saíram do papel</h2>
+          <p>Demonstrações interativas de alguns projetos desenvolvidos pela KO Systems.</p>
         </header>
 
         <div className="project-grid">
