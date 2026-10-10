@@ -1,5 +1,4 @@
-export const defaultWhatsAppMessage =
-  "Olá! Gostaria de solicitar um orçamento. Minha empresa atua no segmento de ___ e preciso de uma solução para ___.";
+export const defaultWhatsAppMessage = "Olá! Gostaria de solicitar um orçamento.";
 
 export function buildWhatsAppUrl(message = defaultWhatsAppMessage): string {
   const url = new URL("https://wa.me/5511930086602");

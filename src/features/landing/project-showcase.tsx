@@ -54,6 +54,12 @@ export function ProjectShowcase({ projects }: { projects: readonly ProjectCase[]
                     <span className="project-client-wordmark">{project.clientName}</span>
                   )}
                 </span>
+                <span className="project-card-copy">
+                  <span className="project-segment">{project.segment}</span>
+                  <strong>{project.clientName}</strong>
+                  <span className="project-card-system">{project.shortTitle}</span>
+                  <span>{project.summary}</span>
+                </span>
               </button>
             );
           })}

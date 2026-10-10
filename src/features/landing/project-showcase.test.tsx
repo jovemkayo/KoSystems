@@ -17,6 +17,7 @@ describe("ProjectShowcase", () => {
       expect(button).toHaveAccessibleName();
       expect(button.querySelectorAll("img")).toHaveLength(1);
       expect(button).toHaveAttribute("aria-haspopup", "dialog");
+      expect(button.textContent).not.toBe("");
     }
   });
   it("abre o projeto escolhido e descarta o estado da demonstração ao fechar", async () => {

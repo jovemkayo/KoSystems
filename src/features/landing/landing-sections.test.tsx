@@ -54,6 +54,7 @@ describe("seções institucionais", () => {
       "href",
       expect.stringContaining("https://wa.me/5511930086602"),
     );
-    expect(screen.getByRole("link", { name: "Sobre mim" })).toHaveAttribute("href", "/sobre");
+    expect(screen.queryByRole("link", { name: "Sobre mim" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Solicitar um orçamento" })).toBeVisible();
   });
 });
