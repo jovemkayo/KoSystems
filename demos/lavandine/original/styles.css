@@ -177,3 +177,13 @@
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-soft);
 }
+
+@media (max-width: 767px) {
+  .demo-mobile-header { transition: padding .2s ease; }
+  .demo-mobile-header img { transition: width .2s ease; }
+  .demo-mobile-header[data-compact="true"] { padding-block: 6px; }
+  .demo-mobile-header[data-compact="true"] img { width: 72px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .demo-mobile-header, .demo-mobile-header img { transition: none; }
+}

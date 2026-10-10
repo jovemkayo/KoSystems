@@ -271,7 +271,7 @@ a { color: inherit; }
 
 .process-section { width: 100%; max-width: none; background: white; scroll-margin-top: 64px; }
 .process-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 86px 0 0; padding: 0; list-style: none; counter-reset: none; }
-.process-grid li { min-height: 270px; display: flex; flex-direction: column; border-top: 2px solid var(--ko-navy); padding: 20px 8px 0; }.process-grid li > span { color: #6f7b8e; font-size: 11px; }.process-grid h3 { margin: auto 0 14px; font-size: clamp(22px, 2.4vw, 30px); }.process-grid p { min-height: 78px; margin: 0; color: #657087; line-height: 1.6; }
+.process-grid li { min-height: 220px; display: flex; flex-direction: column; border-top: 2px solid var(--ko-navy); padding: 20px 8px 0; }.process-grid li > span { color: #6f7b8e; font-size: 11px; }.process-grid h3 { margin: 24px 0 14px; font-size: clamp(22px, 2.4vw, 30px); }.process-grid p { min-height: 78px; margin: 0; color: #657087; line-height: 1.6; }
 
 .contact-section { min-height: 620px; position: relative; display: grid; grid-template-columns: 1fr 1.15fr; align-items: center; overflow: hidden; background: var(--ko-cyan); color: var(--ko-navy); padding: clamp(70px, 10vw, 140px) clamp(20px, 6vw, 96px); }
 .contact-orbit { display: grid; place-items: center; width: min(34vw, 440px); aspect-ratio: 1; border: 1px solid rgb(3 19 63 / .24); border-radius: 50%; font-family: var(--font-display); font-size: clamp(80px, 14vw, 190px); font-weight: 700; letter-spacing: -.1em; }

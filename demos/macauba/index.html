@@ -11,16 +11,11 @@
       <header class="topbar">
         <div>
           <p class="eyebrow">Macaúba Hortifruti</p>
-          <h1>ERP de pedidos e separação</h1>
+<h1>Leitor de pedidos</h1>
         </div>
         <div class="status-pill" id="statusResumo">Nenhum pedido enviado</div>
       </header>
 
-      <nav class="tabs" aria-label="Módulos">
-        <button class="tab active" data-tab="admin" type="button">Administrativo</button>
-        <button class="tab" data-tab="separacao" type="button">Separação</button>
-        <button class="tab" data-tab="retorno" type="button">Retorno / Pré-nota</button>
-      </nav>
 
       <section class="view active" id="admin">
         <aside class="panel">
@@ -40,7 +35,6 @@
               <input id="pdfInput" type="file" accept=".pdf,application/pdf" />
             </label>
           </div>
-          <button class="send" id="enviarSeparacaoBtn" type="button">Enviar para separação</button>
           <button class="print-button" id="imprimirPedidoBtn" type="button">Imprimir pedido</button>
           <p class="hint" id="adminStatus">Aguardando pedido.</p>
         </aside>
@@ -70,66 +64,6 @@
         </section>
       </section>
 
-      <section class="view" id="separacao">
-        <section class="panel wide full">
-          <div class="section-title">
-            <div>
-              <span>Tablet da separação</span>
-              <strong id="sepCliente">Nenhum pedido na fila</strong>
-            </div>
-            <small id="sepStatus">Aguardando administrativo</small>
-          </div>
-          <div class="table-wrap">
-            <table class="order-table tablet">
-              <thead>
-                <tr>
-                  <th>Produto</th>
-                  <th>Quant.</th>
-                  <th>Unidade</th>
-                  <th>Peso real</th>
-                  <th>Observação</th>
-                </tr>
-              </thead>
-              <tbody id="sepTabela"></tbody>
-            </table>
-          </div>
-          <div class="footer-actions">
-            <button class="send" id="devolverAdminBtn" type="button">Enviar peso real para administrativo</button>
-          </div>
-        </section>
-      </section>
-
-      <section class="view" id="retorno">
-        <section class="panel wide full">
-          <div class="section-title">
-            <div>
-              <span>Retorno para faturamento</span>
-              <strong id="retCliente">Sem pedido finalizado</strong>
-            </div>
-            <small id="retTotal">R$ 0,00</small>
-          </div>
-          <div class="table-wrap">
-            <table class="order-table invoice">
-              <thead>
-                <tr>
-                  <th>Produto</th>
-                  <th>Qtd. pedida</th>
-                  <th>Peso real</th>
-                  <th>Unidade</th>
-                  <th>Preço un.</th>
-                  <th>Total</th>
-                  <th>Observação</th>
-                </tr>
-              </thead>
-              <tbody id="retTabela"></tbody>
-            </table>
-          </div>
-          <div class="note-box">
-            <strong>Próxima fase fiscal</strong>
-            <p>Esta pré-nota organiza os valores. A emissão real de NF-e/DANFE deve ser integrada depois com uma API fiscal e validada com o contador.</p>
-          </div>
-        </section>
-      </section>
     </main>
     <section class="print-area" id="printArea" aria-hidden="true"></section>
 

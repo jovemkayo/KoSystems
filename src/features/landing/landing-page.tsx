@@ -30,7 +30,7 @@ export function LandingPage() {
         }}
       >
         <div className="hero-reveal">
-          <h1>Sistemas que transformam desafios reais em operações melhores.</h1>
+          <h1>Sistemas que transformam desafios reais em operações eficientes.</h1>
           <div className="hero-reveal-bottom">
             <p>
               Da ideia à publicação, criamos soluções digitais alinhadas à forma como sua empresa

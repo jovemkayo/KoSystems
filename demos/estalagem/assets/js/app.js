@@ -15,8 +15,8 @@
   const fullDateFmt = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
   const roleViews = {
     balanca: ["balanca", "caixa"],
-    caixa: ["caixa", "fiado"],
-    admin: ["balanca", "caixa", "fiado", "relatorios", "config"]
+    caixa: ["caixa"],
+    admin: ["balanca", "caixa", "relatorios", "config"]
   };
   const roleNames = {
     balanca: "Balança",
@@ -25,7 +25,7 @@
   };
 
   const initialState = {
-    commandMax: 100,
+    commandMax: 50,
     selectedCommand: null,
     selectedOrders: [],
     selectedClientId: null,
@@ -135,7 +135,7 @@
     doces: "Doces",
     outros: "Outros"
   };
-  const paymentMethods = ["Dinheiro", "Débito", "Crédito", "Pix", "Voucher refeição", "Voucher benefícios", "Fiado"];
+  const paymentMethods = ["Dinheiro", "Débito", "Crédito", "Pix", "Voucher refeição", "Voucher benefícios"];
   const salesPaymentFilters = ["Todos", "Dinheiro", "Pix", "Débito", "Crédito", "Voucher refeição", "Voucher benefícios"];
   const cieloPaymentMethods = ["Débito", "Crédito", "Voucher refeição", "Voucher benefícios"];
 
@@ -410,6 +410,7 @@
   }
 
   function normalizeRuntimeState(data) {
+    data.commandMax = 50;
     data.products = normalizeProducts(data.products);
     data.orders = (Array.isArray(data.orders) ? data.orders : []).map((order) => ({
       ...order,
@@ -2260,12 +2261,6 @@
       ? `${discountParts.join(" + ")}: desconto de ${money.format(discount)}`
       : "Nenhum desconto aplicado.";
     renderDiscountButtons();
-    const hasFiado = $("#paymentMethod").value === "Fiado" || state.pendingPayments.some((p) => p.method === "Fiado");
-    $("#fiadoSelectBox").classList.toggle("visible", hasFiado);
-    $$(".discount-btn").forEach((btn) => {
-      btn.disabled = hasFiado;
-      btn.title = hasFiado ? "Desconto de empresa não se aplica ao fiado." : "";
-    });
     const overage = paidOverage();
     $("#changeBox").classList.toggle("visible", overage > 0);
     $("#keepChangeBtn").classList.toggle("visible", overage > 0);
@@ -2274,7 +2269,6 @@
     if (!overage) $("#changeGiven").value = "";
     $("#checkoutSummary").textContent = `Pago: ${money.format(paidTotal())} | Restante: ${money.format(remainingTotal())}`;
     renderPaymentList();
-    renderClientOptions();
   }
 
   function pixCheckoutAmount() {
@@ -3416,8 +3410,6 @@
       ["Débito", money.format(byMethod("Débito"))],
       ["Crédito", money.format(byMethod("Crédito"))],
       ["Voucher refeição", money.format(byMethod("Voucher refeição"))],
-      ["Fiado lançado", money.format(bySaleMethod("Fiado"))],
-      ["Fiado pendente", money.format(pendingDebt)],
       ["Caixa inicial", money.format(cashStart)],
       ["Caixa final", money.format(cashFinal)],
       ["Troco deixado", money.format(keptChange)],
@@ -3571,10 +3563,6 @@
     renderSafely("comandas do caixa", renderOpenOrders);
     renderSafely("editor de comanda", renderOrderEditor);
     renderSafely("caixa", renderCheckout);
-    renderSafely("clientes", renderClients);
-    renderSafely("formulário de cliente", renderClientForm);
-    renderSafely("histórico do cliente", renderSelectedClient);
-    renderSafely("pix do fiado", renderDebtPixBox);
     renderSafely("produtos", renderProducts);
     renderSafely("empresas", renderCompanies);
     renderSafely("relatórios", renderReports);
@@ -3583,33 +3571,6 @@
   }
 
   function bindEvents() {
-    if (!$("#clientFormModal")) {
-      const clientForm = $("#clientForm");
-      const modal = document.createElement("div");
-      const card = document.createElement("div");
-      const title = document.createElement("h2");
-      modal.className = "modal hidden";
-      modal.id = "clientFormModal";
-      modal.setAttribute("role", "dialog");
-      modal.setAttribute("aria-modal", "true");
-      modal.setAttribute("aria-labelledby", "clientFormTitle");
-      card.className = "modal-card";
-      title.id = "clientFormTitle";
-      title.textContent = "Novo cliente";
-      card.appendChild(title);
-      card.appendChild(clientForm);
-      modal.appendChild(card);
-      document.body.appendChild(modal);
-    }
-
-    if (!$("#cancelClientBtn")) {
-      const cancelClient = document.createElement("button");
-      cancelClient.className = "secondary";
-      cancelClient.id = "cancelClientBtn";
-      cancelClient.type = "button";
-      cancelClient.textContent = "Cancelar";
-      $("#clientForm").appendChild(cancelClient);
-    }
 
     $$(".tab").forEach((tab) => tab.addEventListener("click", () => {
       if (!canAccess(tab.dataset.view)) return;
@@ -3722,7 +3683,7 @@
       render();
     });
 
-    ["#scaleValue", "#paymentAmount", "#manualDiscountAmount", "#debtPaymentAmount", "#productPrice", "#cashStart", "#changeGiven", "#buffetPrice", "#pixModalAmountInput"].forEach(wireMoneyInput);
+    ["#scaleValue", "#paymentAmount", "#manualDiscountAmount", "#productPrice", "#cashStart", "#changeGiven", "#buffetPrice", "#pixModalAmountInput"].forEach(wireMoneyInput);
 
     $("#addMealBtn").addEventListener("click", () => {
       const value = parseMoney($("#scaleValue").value);
@@ -3798,28 +3759,9 @@
       if ($("#paymentMethod").value === "Pix") openPixModal();
     });
 
-    $("#checkoutClient").addEventListener("change", () => {
-      state.selectedCheckoutClientId = $("#checkoutClient").value;
-      saveLocalState();
-      renderClientOptions();
-    });
 
     $("#pixModalAmountInput").addEventListener("input", renderPixModal);
 
-    $("#debtPaymentMethod").addEventListener("change", renderDebtPixBox);
-    $("#debtPaymentAmount").addEventListener("input", renderDebtPixBox);
-
-    $("#copyDebtPixBtn").addEventListener("click", async () => {
-      const code = $("#debtPixCopyCode").value;
-      if (!code) return;
-      try {
-        await navigator.clipboard.writeText(code);
-        $("#debtPixHint").textContent = "Código Pix copiado.";
-      } catch {
-        $("#debtPixCopyCode").select();
-        $("#debtPixHint").textContent = "Selecionei o código. Copie manualmente.";
-      }
-    });
 
     $("#addPaymentBtn").addEventListener("click", () => {
       const amount = parseMoney($("#paymentAmount").value) || remainingTotal();
@@ -3856,122 +3798,6 @@
       closeSelectedOrders({ changeGiven: 0, keptChange });
     });
 
-    $("#saveClientBtn").addEventListener("click", () => {
-      const name = $("#clientName").value.trim();
-      if (!name) return alert("Informe o nome do cliente.");
-      const editing = state.clients.find((item) => item.id === state.editingClientId);
-      const client = editing || { id: id(), name: "", phone: "", note: "", entries: [] };
-      const shouldReturnToCheckout = state.returnToCheckoutAfterClient;
-      client.name = name;
-      client.phone = $("#clientPhone").value.replace(/\D/g, "");
-      client.note = $("#clientNote").value.trim();
-      if (!editing) state.clients.push(client);
-      if (shouldReturnToCheckout) state.selectedCheckoutClientId = client.id;
-      else state.selectedClientId = client.id;
-      state.showClientForm = false;
-      state.editingClientId = null;
-      state.returnToCheckoutAfterClient = false;
-      $("#clientName").value = "";
-      $("#clientPhone").value = "";
-      $("#clientNote").value = "";
-      saveState({ clientsChanged: true });
-      render();
-    });
-
-    $("#newClientBtn").addEventListener("click", () => {
-      state.editingClientId = null;
-      state.returnToCheckoutAfterClient = false;
-      state.showClientForm = !state.showClientForm;
-      $("#clientName").value = "";
-      $("#clientPhone").value = "";
-      $("#clientNote").value = "";
-      saveLocalState();
-      renderClientForm();
-      if (state.showClientForm) setTimeout(() => $("#clientName").focus(), 0);
-    });
-
-    $("#cancelClientBtn").addEventListener("click", () => {
-      state.showClientForm = false;
-      state.editingClientId = null;
-      state.returnToCheckoutAfterClient = false;
-      $("#clientName").value = "";
-      $("#clientPhone").value = "";
-      $("#clientNote").value = "";
-      saveLocalState();
-      renderClientForm();
-    });
-
-    $("#clientFormModal").addEventListener("click", (event) => {
-      if (event.target.id !== "clientFormModal") return;
-      state.showClientForm = false;
-      state.editingClientId = null;
-      state.returnToCheckoutAfterClient = false;
-      saveLocalState();
-      renderClientForm();
-    });
-    $("#closeClientDetailBtn").addEventListener("click", () => {
-      state.selectedClientId = null;
-      saveLocalState();
-      render();
-    });
-    $("#clientDetailModal").addEventListener("click", (event) => {
-      if (event.target.id !== "clientDetailModal") return;
-      state.selectedClientId = null;
-      saveLocalState();
-      render();
-    });
-
-    $("#newClientFromCheckoutBtn").addEventListener("click", () => {
-      state.editingClientId = null;
-      state.returnToCheckoutAfterClient = true;
-      state.showClientForm = true;
-      saveLocalState();
-      renderClientForm();
-      setTimeout(() => $("#clientName").focus(), 0);
-    });
-
-    $("#clientSearch").addEventListener("input", renderClients);
-
-    $("#editClientBtn").addEventListener("click", () => {
-      const client = state.clients.find((item) => item.id === state.selectedClientId);
-      if (!client) return;
-      state.editingClientId = client.id;
-      state.showClientForm = true;
-      $("#clientName").value = client.name;
-      $("#clientPhone").value = client.phone;
-      $("#clientNote").value = client.note || "";
-      saveLocalState();
-      renderClientForm();
-      setTimeout(() => $("#clientName").focus(), 0);
-    });
-
-    $("#payDebtBtn").addEventListener("click", () => {
-      const client = state.clients.find((item) => item.id === state.selectedClientId);
-      const amount = parseMoney($("#debtPaymentAmount").value);
-      if (!client || !amount) return;
-      client.entries.push({ id: id(), type: "payment", amount, method: $("#debtPaymentMethod").value, date: todayIso(), origin: "Abatimento" });
-      $("#debtPaymentAmount").value = "";
-      saveState({ clientsChanged: true });
-      render();
-      renderDebtPixBox();
-    });
-
-    $("#whatsappBtn").addEventListener("click", () => {
-      const client = state.clients.find((item) => item.id === state.selectedClientId);
-      if (!client || !client.phone) return;
-      const text = encodeURIComponent(clientDebtWhatsappMessage(client));
-      window.open(`https://wa.me/55${client.phone}?text=${text}`, "_blank");
-    });
-
-    $("#openDebtDetailBtn").addEventListener("click", openDebtDetailModal);
-    $("#closeDebtDetailBtn").addEventListener("click", closeDebtDetailModal);
-    $("#debtDetailModal").addEventListener("click", (event) => {
-      if (event.target.id === "debtDetailModal") closeDebtDetailModal();
-    });
-    $("#debtDetailStart").addEventListener("change", renderDebtDetailPreview);
-    $("#debtDetailEnd").addEventListener("change", renderDebtDetailPreview);
-    $("#downloadDebtImageBtn").addEventListener("click", downloadDebtDetailImage);
-    $("#sendDebtWhatsappBtn").addEventListener("click", sendDebtDetailWhatsapp);
     if ($("#saveScheduleBtn")) $("#saveScheduleBtn").addEventListener("click", saveScheduleFromForm);
     if ($("#scheduleType")) $("#scheduleType").addEventListener("change", renderScheduleFrequencyFields);
     if ($("#scheduleFrequency")) $("#scheduleFrequency").addEventListener("change", renderScheduleFrequencyFields);

@@ -286,37 +286,6 @@ function renderAdmin() {
   $("statusResumo").textContent = pedido ? `Pedido ${pedido.status}` : "Nenhum pedido enviado";
 }
 
-function renderSep() {
-  const pedido = state.pedido;
-  $("sepCliente").textContent = pedido?.cliente || "Nenhum pedido na fila";
-  $("sepStatus").textContent = pedido ? pedido.status : "Aguardando administrativo";
-  $("sepTabela").innerHTML = renderLinhas(itensOrdenados(pedido?.itens || []), "sep");
-}
-
-function renderRetorno() {
-  const pedido = state.retorno;
-  $("retCliente").textContent = pedido?.cliente || "Sem pedido finalizado";
-  $("retTabela").innerHTML = itensOrdenados(pedido?.itens || [])
-    .map((item) => {
-      const qtdFaturar = numero(item.pesoReal || item.quantidade);
-      const total = qtdFaturar * item.preco;
-      return `
-        <tr>
-          <td>${item.produto.toUpperCase()}</td>
-          <td>${item.quantidade}</td>
-          <td>${item.pesoReal || "-"}</td>
-          <td>${item.unidade.toUpperCase()}</td>
-          <td>${moeda(item.preco)}</td>
-          <td>${moeda(total)}</td>
-          <td>${item.observacao || ""}</td>
-        </tr>
-      `;
-    })
-    .join("");
-
-  const total = (pedido?.itens || []).reduce((acc, item) => acc + numero(item.pesoReal || item.quantidade) * item.preco, 0);
-  $("retTotal").textContent = moeda(total);
-}
 
 function itensOrdenados(itens) {
   return [...itens].sort(ordenarPorProduto);
@@ -425,8 +394,6 @@ function renderLinhas(itens, contexto) {
 
 function renderTudo() {
   renderAdmin();
-  renderSep();
-  renderRetorno();
 }
 
 function atualizarItem(input) {
@@ -510,14 +477,6 @@ async function extrairPdf(file) {
   return trechos.join("\n");
 }
 
-document.querySelectorAll(".tab").forEach((tab) => {
-  tab.addEventListener("click", () => {
-    document.querySelectorAll(".tab").forEach((item) => item.classList.remove("active"));
-    document.querySelectorAll(".view").forEach((item) => item.classList.remove("active"));
-    tab.classList.add("active");
-    $(tab.dataset.tab).classList.add("active");
-  });
-});
 
 document.addEventListener("input", (event) => {
   if (event.target.matches("[data-id][data-field]")) atualizarItem(event.target);
@@ -544,26 +503,9 @@ $("interpretarBtn").addEventListener("click", () => {
   }
 });
 
-$("enviarSeparacaoBtn").addEventListener("click", () => {
-  if (!state.pedido) {
-    $("adminStatus").textContent = "Interprete um pedido antes de enviar.";
-    return;
-  }
-  state.pedido.status = "enviado para separação";
-  $("adminStatus").textContent = "Pedido enviado para o tablet da separação.";
-  document.querySelector('[data-tab="separacao"]').click();
-  renderTudo();
-});
 
 $("imprimirPedidoBtn").addEventListener("click", imprimirPedido);
 
-$("devolverAdminBtn").addEventListener("click", () => {
-  if (!state.pedido) return;
-  state.pedido.status = "separado e devolvido";
-  state.retorno = clonar(state.pedido);
-  document.querySelector('[data-tab="retorno"]').click();
-  renderTudo();
-});
 
 $("pdfInput").addEventListener("change", async (event) => {
   const file = event.target.files?.[0];

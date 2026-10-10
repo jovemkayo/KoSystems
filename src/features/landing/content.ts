@@ -150,7 +150,7 @@ export const processSteps: readonly ProcessStep[] = [
   {
     number: "04",
     title: "Publicar e evoluir",
-    description: "Colocamos o produto em operação e combinamos a evolução adequada ao projeto.",
+    description: "Colocamos em operação e combinamos a evolução adequada ao projeto.",
   },
 ];
 

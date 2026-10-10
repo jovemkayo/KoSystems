@@ -13,6 +13,7 @@ import {
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
+import { useCompactHeader } from "../../../shared/use-compact-header";
 
 const nav = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -29,6 +30,7 @@ const mobileNav = nav;
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { configurado, sessao, sair } = useAuth();
+  const compactHeader = useCompactHeader();
 
   return (
     <div className="min-h-screen md:flex">
@@ -67,7 +69,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-border bg-background/90 px-4 py-3 backdrop-blur md:hidden">
+        <header data-compact={compactHeader} className="demo-mobile-header sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-border bg-background/90 px-4 py-3 backdrop-blur md:hidden">
           <Link to="/" className="min-w-0">
             <img
               src="/assets/logo-lavandine.png"
@@ -96,7 +98,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="min-w-0 flex-1 px-4 pb-36 pt-4 md:px-8 md:pb-10 md:pt-8">
+        <main className="min-w-0 flex-1 px-4 pb-28 pt-4 md:px-8 md:pb-10 md:pt-8">
           <div className="mx-auto w-full max-w-6xl">{children}</div>
         </main>
 
@@ -106,11 +108,12 @@ export function AppShell({ children }: { children: ReactNode }) {
               key={to}
               to={to}
               activeOptions={{ exact: to === "/" }}
-              className="flex min-w-0 flex-col items-center gap-1 py-2.5 text-[11px] text-muted-foreground"
+              aria-label={label}
+              title={label}
+              className="flex min-h-11 min-w-0 items-center justify-center py-2 text-muted-foreground"
               activeProps={{ className: "text-primary font-medium" }}
             >
               <Icon className="size-5" />
-              {label}
             </Link>
           ))}
         </nav>
