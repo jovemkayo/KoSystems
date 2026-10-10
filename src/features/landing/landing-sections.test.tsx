@@ -18,7 +18,12 @@ describe("seções institucionais", () => {
       expect(screen.getByRole("link", { name: label })).toBeVisible();
     }
     expect(screen.getAllByRole("link")).toHaveLength(3);
-    expect(screen.getByRole("link", { name: "Serviços" })).toHaveAttribute("href", "#servicos");
+    expect(screen.getAllByRole("link").map((link) => link.textContent)).toEqual([
+      "Projetos",
+      "Serviços",
+      "Contato",
+    ]);
+    expect(screen.getByRole("link", { name: "Serviços" })).toHaveAttribute("href", "#processo");
   });
 
   it("mostra os cinco serviços e as quatro etapas em ordem", () => {
@@ -55,6 +60,14 @@ describe("seções institucionais", () => {
       expect.stringContaining("https://wa.me/5511930086602"),
     );
     expect(screen.queryByRole("link", { name: "Sobre mim" })).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Solicitar um orçamento" })).toBeVisible();
+    expect(
+      screen.getByRole("heading", {
+        name: "Tem um problema para resolver ou uma ideia para tirar do papel?",
+      }),
+    ).toBeVisible();
+    expect(screen.getByRole("link", { name: "Solicitar orçamento" })).toHaveAttribute(
+      "href",
+      expect.stringContaining("https://wa.me/5511930086602"),
+    );
   });
 });

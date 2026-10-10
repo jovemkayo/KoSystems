@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 
 const links = [
-  ["Serviços", "#servicos"],
   ["Projetos", "#projetos"],
+  ["Serviços", "#processo"],
   ["Contato", "#contato"],
 ] as const;
 

@@ -42,11 +42,34 @@ describe("ProjectShowcase", () => {
     fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /gestão de linhas/i }));
-    expect(screen.getByRole("dialog", { name: "Reference" })).toBeVisible();
-    expect(screen.getByTitle("Demonstração de Reference")).toHaveAttribute(
+    expect(screen.getByRole("dialog", { name: "Referência RH" })).toBeVisible();
+    expect(screen.getByTitle("Demonstração de Referência RH")).toHaveAttribute(
       "src",
       "/demos/reference/index.html",
     );
     expect(screen.queryByRole("button", { name: /adicionar suco/i })).not.toBeInTheDocument();
+  });
+  it("abre a explicação apenas ao clicar e mantém a demonstração ao expandir", () => {
+    render(<ProjectShowcase projects={projects} />);
+    fireEvent.click(screen.getByRole("button", { name: /pdv restaurante/i }));
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveAccessibleDescription("Explore as telas");
+    const frame = within(dialog).getByTitle("Demonstração de Estalagem Restaurante");
+    const toggle = within(dialog).getByRole("button", { name: "Conheça a solução" });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    fireEvent.mouseOver(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(within(dialog).getByRole("region", { name: "Conheça a solução" })).toBeInTheDocument();
+    expect(within(dialog).getByRole("heading", { name: "PDV para restaurante" })).toBeVisible();
+    expect(within(dialog).queryByText("Alimentação")).not.toBeInTheDocument();
+    expect(within(dialog).queryByRole("list")).not.toBeInTheDocument();
+    expect(within(dialog).getByTitle("Demonstração de Estalagem Restaurante")).toBe(frame);
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(
+      within(dialog).queryByRole("region", { name: "Conheça a solução" }),
+    ).not.toBeInTheDocument();
   });
 });

@@ -38,9 +38,9 @@ export const projects: readonly ProjectCase[] = [
     shortTitle: "PDV restaurante",
     summary: "Balança, comandas e pagamentos reunidos em um fluxo rápido para a operação diária.",
     problem:
-      "A equipe precisava conectar a pesagem dos pratos ao fechamento das comandas, com controle claro dos pagamentos.",
+      "Substituir o controle em papel por uma rotina digital mais prática, reunindo consumo, pagamentos pendentes e fechamento de caixa, com relatórios para acompanhar os resultados e facilitar o envio à contabilidade.",
     solution:
-      "Um ponto de venda com balança, comandas e caixa, que acompanha o consumo até o pagamento.",
+      "Um ponto de venda que integra balança, comandas e caixa. O consumo é registrado pelo celular e vinculado à comanda do cliente, permitindo ao caixa consultar o valor, registrar o pagamento e acompanhar os valores ainda em aberto.",
     capabilities: ["Pesagem e comandas", "Divisão de pagamentos", "Fechamento de caixa"],
     demoKind: "pos",
   },
@@ -54,9 +54,9 @@ export const projects: readonly ProjectCase[] = [
     shortTitle: "Gestão integrada",
     summary: "Produção, estoque, vendas e financeiro conectados em uma única rotina.",
     problem:
-      "Informações importantes estavam separadas, dificultando enxergar disponibilidade, vendas e resultado.",
+      "Reunir informações de produção, estoque, vendas e financeiro que estavam separadas, tornando mais simples acompanhar a disponibilidade dos produtos e os resultados da operação.",
     solution:
-      "Uma plataforma operacional sob medida que organiza o fluxo completo e destaca o que precisa de atenção.",
+      "Uma plataforma de gestão que conecta essas rotinas em um único ambiente, facilita os registros do dia a dia e oferece uma visão organizada do estoque, das vendas e do financeiro.",
     capabilities: ["Produção e estoque", "Vendas", "Visão financeira"],
     demoKind: "management",
   },
@@ -65,7 +65,7 @@ export const projects: readonly ProjectCase[] = [
     segment: "Distribuição de alimentos",
     clientName: "Macaúba Hortifruti",
     demoPath: "/demos/macauba/index.html",
-    previewLogo: "/brand/macauba-hortifruti.png",
+    previewLogo: "/brand/macauba-hortifruti-transparent.png",
     title: "Leitor inteligente de pedidos",
     shortTitle: "Leitor de pedidos",
     summary: "PDFs e textos transformados em tabelas prontas para conferência e separação.",
@@ -79,16 +79,16 @@ export const projects: readonly ProjectCase[] = [
   {
     slug: "gestao-linhas",
     segment: "Serviços corporativos",
-    clientName: "Reference",
+    clientName: "Referência RH",
     demoPath: "/demos/reference/index.html",
     previewLogo: "/demos/reference/reference-symbol.png",
     title: "Gestão de linhas e dispositivos",
     shortTitle: "Gestão de linhas",
     summary: "Controle centralizado de números, aparelhos, responsáveis e movimentações.",
     problem:
-      "A empresa precisava saber com precisão quem utilizava cada linha e acompanhar trocas de aparelhos e responsáveis.",
+      "Identificar os responsáveis por cada linha e aparelho, acompanhar as trocas e controlar quais números estavam disponíveis, ativos, suspensos, banidos ou com restrições no WhatsApp, incluindo as previsões de liberação.",
     solution:
-      "Um sistema interno com histórico e visão organizada do inventário móvel da operação.",
+      "Um sistema interno que centraliza linhas, aparelhos, responsáveis e status, mantendo o histórico das movimentações e uma visão organizada da disponibilidade dos números na operação.",
     capabilities: [
       "Linhas e responsáveis",
       "Inventário de aparelhos",

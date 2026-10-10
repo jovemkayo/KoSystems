@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { RotateCcw, X } from "lucide-react";
+import { ChevronDown, RotateCcw, X } from "lucide-react";
 
 import type { ProjectCase } from "./content";
 
@@ -9,6 +9,7 @@ export function ProjectShowcase({ projects }: { projects: readonly ProjectCase[]
   const selected = projects.find((project) => project.slug === selectedSlug);
   const opener = useRef<HTMLButtonElement>(null);
   const [demoRevision, setDemoRevision] = useState(0);
+  const [storyOpen, setStoryOpen] = useState(false);
   if (!projects.length) return null;
 
   return (
@@ -39,6 +40,7 @@ export function ProjectShowcase({ projects }: { projects: readonly ProjectCase[]
                 onClick={(event) => {
                   opener.current = event.currentTarget;
                   setDemoRevision(0);
+                  setStoryOpen(false);
                   setSelectedSlug(project.slug);
                 }}
               >
@@ -90,41 +92,50 @@ export function ProjectShowcase({ projects }: { projects: readonly ProjectCase[]
               </div>
               <div className="original-project-summary">
                 <Dialog.Title>{selected.clientName}</Dialog.Title>
-                <Dialog.Description>
-                  {selected.title}. Explore as telas originais com dados fictícios.
-                </Dialog.Description>
+                <Dialog.Description>Explore as telas</Dialog.Description>
               </div>
-              <iframe
-                key={`${selected.slug}-${demoRevision}`}
-                className="original-project-frame"
-                src={selected.demoPath}
-                title={`Demonstração de ${selected.clientName}`}
-                sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-downloads"
-                referrerPolicy="no-referrer"
-                loading="eager"
-              />
-              <details className="original-project-story">
-                <summary>Conheça a solução</summary>
-                <div className="project-detail">
-                  <div className="project-story">
-                    <span className="eyebrow">{selected.segment}</span>
-                    <h3>{selected.title}</h3>
-                    <div className="story-block">
-                      <span>O desafio</span>
-                      <p>{selected.problem}</p>
-                    </div>
-                    <div className="story-block">
-                      <span>A solução</span>
-                      <p>{selected.solution}</p>
-                    </div>
-                    <ul>
-                      {selected.capabilities.map((capability) => (
-                        <li key={capability}>{capability}</li>
-                      ))}
-                    </ul>
+              <div className="original-project-body">
+                <button
+                  type="button"
+                  id="project-story-toggle"
+                  className="project-story-toggle"
+                  aria-expanded={storyOpen}
+                  aria-controls="project-story-panel"
+                  onClick={() => setStoryOpen((open) => !open)}
+                >
+                  Conheça a solução <ChevronDown aria-hidden="true" />
+                </button>
+                <div className="original-project-story" data-open={storyOpen}>
+                  <div className="project-story-clip">
+                    <section
+                      id="project-story-panel"
+                      aria-labelledby="project-story-toggle"
+                      aria-hidden={!storyOpen}
+                      inert={!storyOpen}
+                      className="project-story"
+                    >
+                      <h3>{selected.title}</h3>
+                      <div className="story-block">
+                        <span>O desafio</span>
+                        <p>{selected.problem}</p>
+                      </div>
+                      <div className="story-block">
+                        <span>A solução</span>
+                        <p>{selected.solution}</p>
+                      </div>
+                    </section>
                   </div>
                 </div>
-              </details>
+                <iframe
+                  key={`${selected.slug}-${demoRevision}`}
+                  className="original-project-frame"
+                  src={selected.demoPath}
+                  title={`Demonstração de ${selected.clientName}`}
+                  sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-downloads"
+                  referrerPolicy="no-referrer"
+                  loading="eager"
+                />
+              </div>
             </Dialog.Content>
           </Dialog.Portal>
         ) : null}

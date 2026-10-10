@@ -9,9 +9,9 @@ export function ContactSection() {
         <BrandMark surface="light" format="symbol" className="contact-symbol" />
       </div>
       <div className="contact-copy">
-        <h2 id="contact-title">Solicitar um orçamento</h2>
+        <h2 id="contact-title">Tem um problema para resolver ou uma ideia para tirar do papel?</h2>
         <a href={buildWhatsAppUrl()} target="_blank" rel="noreferrer">
-          Solicitar orçamento no WhatsApp <ArrowUpRight aria-hidden="true" />
+          Solicitar orçamento <ArrowUpRight aria-hidden="true" />
         </a>
       </div>
     </section>
