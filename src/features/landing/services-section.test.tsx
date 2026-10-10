@@ -13,73 +13,92 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-it("moves the focused service with page scrolling without requiring scrolling inside the list", async () => {
-  let offset = 0;
-  vi.stubGlobal("innerHeight", 800);
-  vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) =>
-    window.setTimeout(() => callback(0), 0),
-  );
-  vi.stubGlobal("cancelAnimationFrame", window.clearTimeout.bind(window));
-  vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (
-    this: HTMLElement,
-  ) {
-    if (this.classList.contains("services-section")) {
+it.each([800, 844, 667])(
+  "moves focus forward and backward with page scrolling at viewport height %i",
+  async (viewportHeight) => {
+    let offset = 0;
+    vi.stubGlobal("innerHeight", viewportHeight);
+    vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) =>
+      window.setTimeout(() => callback(0), 0),
+    );
+    vi.stubGlobal("cancelAnimationFrame", window.clearTimeout.bind(window));
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      if (this.classList.contains("services-section")) {
+        return {
+          top: -offset,
+          bottom: 2000 - offset,
+          height: 2000,
+          left: 0,
+          right: 600,
+          width: 600,
+          x: 0,
+          y: -offset,
+          toJSON() {},
+        };
+      }
+      if (this.classList.contains("services-list")) {
+        return {
+          top: 100,
+          bottom: 500,
+          height: 400,
+          left: 0,
+          right: 600,
+          width: 600,
+          x: 0,
+          y: 100,
+          toJSON() {},
+        };
+      }
+      const index = Number(this.getAttribute("data-service-index"));
+      const top = this.classList.contains("services-track") ? 0 : 220 + index * 240;
       return {
-        top: -offset,
-        bottom: 2000 - offset,
-        height: 2000,
+        top,
+        bottom: top + 120,
+        height: 120,
         left: 0,
         right: 600,
         width: 600,
         x: 0,
-        y: -offset,
+        y: top,
         toJSON() {},
       };
-    }
-    if (this.classList.contains("services-list")) {
-      return {
-        top: 100,
-        bottom: 500,
-        height: 400,
-        left: 0,
-        right: 600,
-        width: 600,
-        x: 0,
-        y: 100,
-        toJSON() {},
-      };
-    }
-    const index = Number(this.getAttribute("data-service-index"));
-    const top = this.classList.contains("services-track") ? 0 : 220 + index * 240;
-    return {
-      top,
-      bottom: top + 120,
-      height: 120,
-      left: 0,
-      right: 600,
-      width: 600,
-      x: 0,
-      y: top,
-      toJSON() {},
-    };
-  });
-  const { container } = render(<ServicesSection />);
-  const rows = container.querySelectorAll("article");
-  expect([...rows].filter((row) => row.getAttribute("data-focused") === "true")).toEqual([rows[0]]);
-
-  offset = 600;
-  act(() => window.dispatchEvent(new Event("scroll")));
-  await waitFor(() => {
+    });
+    const { container } = render(<ServicesSection />);
+    const rows = container.querySelectorAll("article");
     expect([...rows].filter((row) => row.getAttribute("data-focused") === "true")).toEqual([
-      rows[2],
+      rows[0],
     ]);
-  });
 
-  offset = 1200;
-  act(() => window.dispatchEvent(new Event("scroll")));
-  await waitFor(() => {
-    expect([...rows].filter((row) => row.getAttribute("data-focused") === "true")).toEqual([
-      rows[4],
-    ]);
-  });
-});
+    offset = (2000 - viewportHeight) / 2;
+    act(() => window.dispatchEvent(new Event("scroll")));
+    await waitFor(() => {
+      expect([...rows].filter((row) => row.getAttribute("data-focused") === "true")).toEqual([
+        rows[2],
+      ]);
+    });
+    expect(
+      Number((rows[1] as HTMLElement).style.getPropertyValue("--service-angle").replace("deg", "")),
+    ).toBeGreaterThan(0);
+    expect(
+      Number((rows[3] as HTMLElement).style.getPropertyValue("--service-angle").replace("deg", "")),
+    ).toBeLessThan(0);
+
+    offset = 2000 - viewportHeight;
+    act(() => window.dispatchEvent(new Event("scroll")));
+    await waitFor(() => {
+      expect([...rows].filter((row) => row.getAttribute("data-focused") === "true")).toEqual([
+        rows[4],
+      ]);
+    });
+
+    offset = (2000 - viewportHeight) / 4;
+    act(() => window.dispatchEvent(new Event("scroll")));
+    await waitFor(() => {
+      expect([...rows].filter((row) => row.getAttribute("data-focused") === "true")).toEqual([
+        rows[1],
+      ]);
+    });
+  },
+);
