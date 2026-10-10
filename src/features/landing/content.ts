@@ -79,7 +79,7 @@ export const projects: readonly ProjectCase[] = [
   {
     slug: "gestao-linhas",
     segment: "Serviços corporativos",
-    clientName: "Referência RH",
+    clientName: "Reference RH",
     demoPath: "/demos/reference/index.html",
     previewLogo: "/demos/reference/reference-symbol.png",
     title: "Gestão de linhas e dispositivos",

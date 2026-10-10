@@ -270,7 +270,7 @@ a { color: inherit; }
 .service-row > span { color: #7a8799; font-size: 12px; padding-top: 5px; }.service-row h3 { margin: 0; font-size: clamp(20px, 1.7vw, 25px); }.service-row p { margin: 0; color: #526078; line-height: 1.5; }.service-row svg { width: 18px; }
 
 .process-section { width: 100%; max-width: none; background: #f6f7f9; scroll-margin-top: 64px; }
-.process-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 62px 0 0; padding: 0; list-style: none; counter-reset: none; }
+.process-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 86px 0 0; padding: 0; list-style: none; counter-reset: none; }
 .process-grid li { min-height: 270px; display: flex; flex-direction: column; border-top: 2px solid var(--ko-navy); padding: 20px 8px 0; }.process-grid li > span { color: #6f7b8e; font-size: 11px; }.process-grid h3 { margin: auto 0 14px; font-size: clamp(22px, 2.4vw, 30px); }.process-grid p { min-height: 78px; margin: 0; color: #657087; line-height: 1.6; }
 
 .contact-section { min-height: 620px; position: relative; display: grid; grid-template-columns: 1fr 1.15fr; align-items: center; overflow: hidden; background: var(--ko-cyan); color: var(--ko-navy); padding: clamp(70px, 10vw, 140px) clamp(20px, 6vw, 96px); }
@@ -476,7 +476,7 @@ a { color: inherit; }
 .footer-social a:hover { color: var(--ko-cyan); border-color: var(--ko-cyan); }
 .footer-social svg { width: 21px; height: 21px; }
 .footer-social a:focus-visible, .footer-institutional a:focus-visible { outline: 2px solid var(--ko-cyan); outline-offset: 4px; }
-.footer-institutional { justify-self: end; text-align: right; font-size: 12px; line-height: 1.7; padding-left: 20px; }
+.footer-institutional { justify-self: end; text-align: left; font-size: 12px; line-height: 1.7; padding-left: 20px; }
 .footer-institutional a { text-decoration: none; }
 .footer-institutional p { margin: 0; color: rgb(255 255 255 / .65); }
 .footer-institutional span { display: block; }
@@ -510,7 +510,7 @@ a { color: inherit; }
   .footer-main > p { max-width: 300px; }
   .footer-logo { width: 130px; height: 100px; }
   .footer-social { grid-column: auto; }
-  .footer-institutional { justify-self: center; padding-left: 0; text-align: center; }
+  .footer-institutional { justify-self: center; padding-left: 0; text-align: left; }
   .footer-institutional p { margin-top: 6px; }
   .footer-bottom { flex-direction: row; margin-top: 22px; }
   .about-introduction { grid-template-columns: 1fr; gap: 24px; }

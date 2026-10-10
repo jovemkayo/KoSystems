@@ -14,7 +14,7 @@ describe("conteúdo público", () => {
       "Estalagem Restaurante",
       "Lavandine",
       "Macaúba Hortifruti",
-      "Referência RH",
+      "Reference RH",
     ]);
     expect(projects.every((project) => project.demoPath.startsWith("/demos/"))).toBe(true);
   });

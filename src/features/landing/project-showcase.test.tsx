@@ -42,8 +42,8 @@ describe("ProjectShowcase", () => {
     fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /gestão de linhas/i }));
-    expect(screen.getByRole("dialog", { name: "Referência RH" })).toBeVisible();
-    expect(screen.getByTitle("Demonstração de Referência RH")).toHaveAttribute(
+    expect(screen.getByRole("dialog", { name: "Reference RH" })).toBeVisible();
+    expect(screen.getByTitle("Demonstração de Reference RH")).toHaveAttribute(
       "src",
       "/demos/reference/index.html",
     );
