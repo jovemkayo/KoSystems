@@ -1,0 +1,16 @@
+/* Load the scroll effect without a second global theme or preflight. */
+@reference "tailwindcss";
+@import "@heroui/styles/components/scroll-shadow.css";
+
+/* The component needs only these two scrollbar utilities, not HeroUI's theme utilities. */
+@utility scrollbar {
+  scrollbar-width: auto;
+  scrollbar-color: auto;
+  scrollbar-gutter: auto;
+}
+@utility scrollbar-none {
+  scrollbar-width: none;
+  scrollbar-color: auto;
+  scrollbar-gutter: auto;
+  -ms-overflow-style: none;
+}

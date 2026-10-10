@@ -1,15 +1,20 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/components/ui/glyph-portal", () => ({
   default: ({ children }: { children: React.ReactNode }) => <section>{children}</section>,
 }));
 
 import { LandingPage } from "./landing-page";
+import { mockResizeObserver } from "@/test/mock-resize-observer";
 
-afterEach(cleanup);
+beforeEach(mockResizeObserver);
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 
 describe("LandingPage", () => {
   it("reúne a jornada comercial completa sem canais inativos", () => {

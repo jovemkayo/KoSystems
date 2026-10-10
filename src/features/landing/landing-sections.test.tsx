@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { mockResizeObserver } from "@/test/mock-resize-observer";
 
 import { ContactSection } from "./contact-section";
 import { ProcessSection } from "./process-section";
@@ -9,7 +10,11 @@ import { ServicesSection } from "./services-section";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
 
-afterEach(cleanup);
+beforeEach(mockResizeObserver);
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 
 describe("seções institucionais", () => {
   it("oferece navegação e contato direto", () => {

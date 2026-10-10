@@ -18,7 +18,7 @@ export function LandingPage() {
         word="SYSTEMS"
         focusChar="S"
         brandImage="/favicon.png"
-        scrollLength={2.4}
+        scrollLength={2.2}
         fontFamily={'"Sora", "Arial Black", sans-serif'}
         fontWeight={700}
         minimalCaption
