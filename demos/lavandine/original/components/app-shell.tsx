@@ -102,7 +102,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="mx-auto w-full max-w-6xl">{children}</div>
         </main>
 
-        <nav aria-label="Navegação mobile" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+        <nav aria-label="Navegação mobile" className="fixed inset-x-0 bottom-0 z-30 flex flex-nowrap overflow-x-auto overscroll-x-contain border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
           {mobileNav.map(({ to, label, icon: Icon }) => (
             <Link
               key={to}
@@ -110,7 +110,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               activeOptions={{ exact: to === "/" }}
               aria-label={label}
               title={label}
-              className="flex min-h-11 min-w-0 items-center justify-center py-2 text-muted-foreground"
+              className="flex min-h-11 min-w-16 shrink-0 items-center justify-center py-2 text-muted-foreground"
               activeProps={{ className: "text-primary font-medium" }}
             >
               <Icon className="size-5" />

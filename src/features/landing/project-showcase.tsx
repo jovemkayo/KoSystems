@@ -25,9 +25,7 @@ export function ProjectShowcase({ projects }: { projects: readonly ProjectCase[]
         aria-labelledby="projects-title"
       >
         <header className="section-heading">
-          <h2 id="projects-title">
-            O trabalho da sua equipe não precisa depender de controles espalhados.
-          </h2>
+          <h2 id="projects-title">Veja o que mudou na rotina de quem usa nossos sistemas.</h2>
         </header>
 
         <div className="project-grid">
