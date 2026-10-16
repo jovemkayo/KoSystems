@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { ChevronDown, RotateCcw, X } from "lucide-react";
+import { RotateCcw, X } from "lucide-react";
 
 import type { ProjectCase } from "./content";
 
@@ -9,7 +9,6 @@ export function ProjectShowcase({ projects }: { projects: readonly ProjectCase[]
   const selected = projects.find((project) => project.slug === selectedSlug);
   const opener = useRef<HTMLButtonElement>(null);
   const [demoRevision, setDemoRevision] = useState(0);
-  const [storyOpen, setStoryOpen] = useState(false);
   if (!projects.length) return null;
 
   return (
@@ -27,7 +26,7 @@ export function ProjectShowcase({ projects }: { projects: readonly ProjectCase[]
         <header className="section-heading">
           <h2 id="projects-title">Menos trabalho manual no caixa, no estoque e nos pedidos.</h2>
           <p>
-            Veja o que desenvolvemos, os resultados relatados por quem usa e experimente as
+            Veja o que desenvolvemos, os resultados relatados por quem usa e interaja com as
             demonstrações com dados fictícios.
           </p>
         </header>
@@ -55,21 +54,22 @@ export function ProjectShowcase({ projects }: { projects: readonly ProjectCase[]
                   <h3 id={`${project.slug}-title`}>{project.headline}</h3>
                   <p>{project.summary}</p>
                   <p className="project-case-result">{project.result}</p>
-                  <p className="project-case-ownership">{project.ownership}</p>
+                  {project.ownership && (
+                    <p className="project-case-ownership">{project.ownership}</p>
+                  )}
                   <button
                     key={project.slug}
                     type="button"
                     className="project-case-open"
-                    aria-label={`${project.clientName} · ${project.shortTitle}`}
+                    aria-label={`Abrir demonstração interativa de ${project.clientName} · ${project.shortTitle}`}
                     aria-haspopup="dialog"
                     onClick={(event) => {
                       opener.current = event.currentTarget;
                       setDemoRevision(0);
-                      setStoryOpen(false);
                       setSelectedSlug(project.slug);
                     }}
                   >
-                    Experimentar {project.clientName}
+                    Abrir demonstração interativa
                   </button>
                 </div>
               </article>
@@ -108,37 +108,6 @@ export function ProjectShowcase({ projects }: { projects: readonly ProjectCase[]
                 </Dialog.Close>
               </div>
               <div className="original-project-body">
-                <button
-                  type="button"
-                  id="project-story-toggle"
-                  className="project-story-toggle"
-                  aria-expanded={storyOpen}
-                  aria-controls="project-story-panel"
-                  onClick={() => setStoryOpen((open) => !open)}
-                >
-                  Conheça a solução <ChevronDown aria-hidden="true" />
-                </button>
-                <div className="original-project-story" data-open={storyOpen}>
-                  <div className="project-story-clip">
-                    <section
-                      id="project-story-panel"
-                      aria-labelledby="project-story-toggle"
-                      aria-hidden={!storyOpen}
-                      inert={!storyOpen}
-                      className="project-story"
-                    >
-                      <h3>{selected.title}</h3>
-                      <div className="story-block">
-                        <span>O desafio</span>
-                        <p>{selected.problem}</p>
-                      </div>
-                      <div className="story-block">
-                        <span>A solução</span>
-                        <p>{selected.solution}</p>
-                      </div>
-                    </section>
-                  </div>
-                </div>
                 <iframe
                   key={`${selected.slug}-${demoRevision}`}
                   className="original-project-frame"

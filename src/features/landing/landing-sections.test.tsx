@@ -52,7 +52,7 @@ describe("seções institucionais", () => {
         <SiteFooter />
       </>,
     );
-    expect(screen.getByText("69.208.733/0001-12")).toBeVisible();
+    expect(screen.getByText("CNPJ: 69.208.733/0001-12")).toBeVisible();
     expect(screen.getByRole("link", { name: "Instagram" })).toHaveAttribute(
       "href",
       "https://www.instagram.com/ko.systems/",

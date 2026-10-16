@@ -98,6 +98,13 @@ it.each([
       Number((rows[3] as HTMLElement).style.getPropertyValue("--service-angle").replace("deg", "")),
     ).toBeLessThan(0);
 
+    offset = end - 80;
+    await act(async () => {
+      window.dispatchEvent(new Event("scroll"));
+      await new Promise((resolve) => window.setTimeout(resolve, 20));
+    });
+    expect((rows[4] as HTMLElement).style.getPropertyValue("--service-y")).toBe("0px");
+
     offset = end;
     act(() => window.dispatchEvent(new Event("scroll")));
     await waitFor(() => {

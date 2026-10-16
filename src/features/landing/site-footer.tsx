@@ -9,10 +9,6 @@ export function SiteFooter() {
     <footer className="site-footer">
       <div className="footer-main">
         <BrandMark surface="dark" className="footer-logo" />
-        <p>
-          KO Systems. Desenvolvemos sistemas para reduzir o trabalho manual no dia a dia da sua
-          empresa.
-        </p>
         <div className="footer-social" aria-label="Redes sociais e contato">
           <a href={company.instagramUrl} target="_blank" rel="noreferrer" aria-label="Instagram">
             <Instagram aria-hidden="true" />
@@ -30,14 +26,10 @@ export function SiteFooter() {
             <Github aria-hidden="true" />
           </a>
         </div>
-        <div className="footer-institutional">
-          <p>
-            CNPJ <span>{company.cnpj}</span>
-          </p>
-        </div>
       </div>
       <div className="footer-bottom">
         <span>© {new Date().getFullYear()} KO Systems</span>
+        <span className="footer-cnpj">CNPJ: {company.cnpj}</span>
       </div>
     </footer>
   );

@@ -17,10 +17,11 @@ describe("ProjectShowcase", () => {
       expect(button).toHaveAccessibleName();
       expect(button).toHaveAttribute("aria-haspopup", "dialog");
       expect(button.textContent).not.toBe("");
+      expect(button).toHaveTextContent("Abrir demonstração interativa");
     }
     expect(screen.getAllByRole("article")).toHaveLength(3);
     expect(screen.getAllByRole("img")).toHaveLength(3);
-    expect(screen.getByRole("heading", { name: /30 minutos para um clique/i })).toBeVisible();
+    expect(screen.getByRole("heading", { name: /30 minutos.*caixa/i })).toBeVisible();
   });
   it("abre o projeto escolhido e descarta o estado da demonstração ao fechar", async () => {
     render(<ProjectShowcase projects={projects} />);
@@ -51,28 +52,18 @@ describe("ProjectShowcase", () => {
     );
     expect(screen.queryByRole("button", { name: /adicionar suco/i })).not.toBeInTheDocument();
   });
-  it("abre a explicação apenas ao clicar e mantém a demonstração ao expandir", () => {
+  it("abre diretamente a aplicação sem uma segunda apresentação da solução", () => {
     render(<ProjectShowcase projects={projects} />);
     fireEvent.click(screen.getByRole("button", { name: /pdv restaurante/i }));
     const dialog = screen.getByRole("dialog");
     expect(dialog).toHaveAccessibleDescription("Demonstração interativa · Dados fictícios");
-    expect(within(dialog).queryByText("Explore as telas")).not.toBeInTheDocument();
-    const frame = within(dialog).getByTitle("Demonstração de Estalagem Restaurante");
-    const toggle = within(dialog).getByRole("button", { name: "Conheça a solução" });
-    expect(toggle).toHaveAttribute("aria-expanded", "false");
-    fireEvent.mouseOver(toggle);
-    expect(toggle).toHaveAttribute("aria-expanded", "false");
-    fireEvent.click(toggle);
-    expect(toggle).toHaveAttribute("aria-expanded", "true");
-    expect(within(dialog).getByRole("region", { name: "Conheça a solução" })).toBeInTheDocument();
-    expect(within(dialog).getByRole("heading", { name: "PDV para restaurante" })).toBeVisible();
-    expect(within(dialog).queryByText("Alimentação")).not.toBeInTheDocument();
-    expect(within(dialog).queryByRole("list")).not.toBeInTheDocument();
-    expect(within(dialog).getByTitle("Demonstração de Estalagem Restaurante")).toBe(frame);
-    fireEvent.click(toggle);
-    expect(toggle).toHaveAttribute("aria-expanded", "false");
     expect(
-      within(dialog).queryByRole("region", { name: "Conheça a solução" }),
+      within(dialog).queryByRole("button", { name: "Conheça a solução" }),
     ).not.toBeInTheDocument();
+    expect(within(dialog).getByTitle("Demonstração de Estalagem Restaurante")).toHaveAttribute(
+      "src",
+      "/demos/estalagem/index.html",
+    );
+    expect(within(dialog).getAllByRole("button")).toHaveLength(2);
   });
 });

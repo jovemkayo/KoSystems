@@ -12,7 +12,7 @@ import { SiteHeader } from "./site-header";
 
 export function LandingPage() {
   return (
-    <main id="inicio" className="landing-page">
+    <main id="inicio" className="landing-page" tabIndex={-1}>
       <SiteHeader />
       <GlyphPortal
         word="SYSTEMS"

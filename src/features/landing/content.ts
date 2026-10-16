@@ -39,16 +39,16 @@ export const projects: readonly ProjectCase[] = [
     previewLogo: "/demos/estalagem/assets/img/logo-estalagem.png",
     title: "PDV para restaurante",
     shortTitle: "PDV restaurante",
-    headline: "De cerca de 30 minutos para um clique no fechamento de caixa.",
-    ownership: "Sistema desenvolvido pela KO Systems e de propriedade do Estalagem Restaurante.",
+    headline: "De cerca de 30 minutos para fechar o caixa a um clique.",
+    ownership: "",
     result:
-      "Segundo o restaurante, o fechamento passou a economizar de 20 a 30 minutos por dia, de segunda a sexta.",
+      "Segundo o restaurante, o fechamento de caixa passou a economizar de 20 a 30 minutos por dia, de segunda a sábado. Com as informações reunidas, ficou mais fácil acompanhar as vendas, comparar os resultados e organizar o financeiro.",
     summary:
-      "Criamos um PDV que reúne balança, comandas, pagamentos e relatórios. O caixa consulta o consumo registrado pelo celular e fecha o dia sem somar anotações em papel.",
+      "Reunimos balança, comandas e pagamentos em um PDV que também organiza o financeiro. O restaurante acompanha quanto vende por dia, semana, mês ou ano e identifica os períodos de melhor resultado, sem juntar anotações em papel.",
     problem:
-      "O fechamento em papel consumia cerca de 30 minutos por dia. Para enviar o faturamento das máquinas de cartão ao contador, o restaurante ainda separava os comprovantes impressos e dependia de um motoboy, com aproximadamente uma hora dedicada a esse envio.",
+      "O fechamento em papel consumia cerca de 30 minutos por dia e dificultava reunir os números de vendas e acompanhar o financeiro.",
     solution:
-      "Integramos balança, comandas e caixa em um PDV. O consumo registrado pelo celular fica disponível para cobrança, e os relatórios completos podem ser consultados em um clique. Segundo o restaurante, isso economiza de 20 a 30 minutos no fechamento diário e dispensa o envio dos papéis das máquinas por motoboy.",
+      "Integramos balança, comandas, pagamentos e relatórios. O restaurante fecha o caixa em um clique, consulta as vendas por período e acompanha os resultados com mais organização.",
     capabilities: ["Pesagem e comandas", "Divisão de pagamentos", "Fechamento de caixa"],
     demoKind: "pos",
   },
@@ -60,12 +60,12 @@ export const projects: readonly ProjectCase[] = [
     previewLogo: "/demos/lavandine/assets/logo-lavandine.png",
     title: "Gestão integrada de operação",
     shortTitle: "Gestão integrada",
-    headline: "Estoque em quantidade e valor, com o histórico de compra de cada cliente.",
+    headline: "Uma visão organizada da empresa para decidir os próximos passos.",
     ownership: "Sistema desenvolvido pela KO Systems e de propriedade da Lavandine.",
     result:
-      "A Lavandine passou a visualizar produtos e matérias-primas disponíveis, quanto representam em estoque e o que cada cliente compra.",
+      "A Lavandine passou a enxergar a empresa de forma mais organizada: sabe o que tem em estoque, para quem vende e onde pode melhorar. Essa visão ajuda a planejar a produção e os próximos passos do negócio.",
     summary:
-      "Conectamos estoque, produção e vendas para a loja saber o que já tem, planejar novos produtos e consultar as compras dos clientes sem juntar controles separados.",
+      "Organizamos estoque, produção, vendas e financeiro em um só sistema. A loja consegue entender sua operação, aproveitar os materiais disponíveis e acompanhar os clientes com informações reunidas para decidir com mais clareza.",
     problem:
       "A loja não tinha uma visão clara da quantidade e do valor dos produtos e das matérias-primas disponíveis. Isso dificultava aproveitar o estoque existente, planejar novos produtos e acompanhar o que cada cliente comprava.",
     solution:
@@ -81,17 +81,17 @@ export const projects: readonly ProjectCase[] = [
     previewLogo: "/brand/order-workbench.png",
     title: "Pedidos prontos para conferir e imprimir",
     shortTitle: "Organização de pedidos",
-    headline: "De 100 minutos para cerca de 10 a 20 minutos em 10 pedidos por dia.",
+    headline: "Cerca de 85 minutos por dia a menos redigitando pedidos.",
     ownership:
       "Plataforma criada e de propriedade da KO Systems, utilizada por diferentes clientes.",
     result:
-      "Resultado relatado por um cliente: cerca de 10 pedidos diários, antes com 10 minutos por pedido, agora organizados em aproximadamente 10 a 20 minutos no total.",
+      "Um cliente relata que organizar dez pedidos levava cerca de 100 minutos por dia. Com o OrderWorkbench, passou a fazer esse trabalho em aproximadamente 15 minutos, com mais tempo disponível para o restante da operação.",
     summary:
       "Criamos o OrderWorkbench para transformar pedidos recebidos em texto ou PDF em uma tabela editável, pronta para conferir e imprimir, sem redigitar cada item no Excel.",
     problem:
       "Um dos clientes da plataforma gastava, em média, 10 minutos para passar cada pedido de texto ou PDF para o Excel. Com cerca de 10 pedidos por dia, eram aproximadamente 100 minutos dedicados a organizar e imprimir os pedidos para a preparação.",
     solution:
-      "O OrderWorkbench lê o pedido, organiza produtos e quantidades em uma tabela editável e permite imprimir após a conferência. Esse cliente relata fazer os mesmos 10 pedidos em cerca de 10 a 20 minutos no total. O tempo varia conforme o tamanho e o formato dos pedidos.",
+      "O OrderWorkbench organiza produtos e quantidades em uma tabela editável e permite imprimir após a conferência. Um cliente relata fazer dez pedidos em aproximadamente 15 minutos no total, em vez dos 100 minutos anteriores. O tempo varia conforme o tamanho e o formato dos pedidos.",
     capabilities: ["Leitura de documentos", "Tabela organizada", "Conferência de itens"],
     demoKind: "document",
   },

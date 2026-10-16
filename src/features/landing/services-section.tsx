@@ -23,11 +23,13 @@ export function ServicesSection() {
       const panelHeight = sticky.offsetHeight || window.innerHeight;
       // Let the full panel settle into view before rotating its services.
       const entryPause = panelHeight * 0.2;
+      const exitPause = panelHeight * 0.2;
       const progress = Math.max(
         0,
         Math.min(
           1,
-          (-bounds.top - entryPause) / Math.max(1, bounds.height - panelHeight - entryPause),
+          (-bounds.top - entryPause) /
+            Math.max(1, bounds.height - panelHeight - entryPause - exitPause),
         ),
       );
       const position = progress * (rows.length - 1);
