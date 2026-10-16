@@ -74,10 +74,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "KO Systems" },
-      { name: "description", content: "Sistemas e softwares personalizados para empresas." },
+      {
+        name: "description",
+        content:
+          "KO Systems: sistemas para fechar o caixa, controlar o estoque e organizar pedidos com menos trabalho manual.",
+      },
       { name: "author", content: "KO Systems" },
       { property: "og:title", content: "KO Systems" },
-      { property: "og:description", content: "Tecnologia sob medida para negócios em movimento." },
+      {
+        property: "og:description",
+        content:
+          "Menos planilhas para preencher. Sistemas para caixa, estoque e pedidos, desenvolvidos pela KO Systems.",
+      },
       { property: "og:type", content: "website" },
       { property: "og:image", content: "https://kosystems.com.br/brand/ko-systems-light.jpg" },
       { name: "twitter:card", content: "summary_large_image" },

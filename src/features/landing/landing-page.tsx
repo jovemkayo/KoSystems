@@ -30,11 +30,12 @@ export function LandingPage() {
         }}
       >
         <div className="hero-reveal">
-          <h1>Sistemas que transformam desafios reais em operações eficientes.</h1>
+          <h1>Menos planilhas para preencher. Mais tempo para cuidar da sua empresa.</h1>
           <div className="hero-reveal-bottom">
             <p>
-              Da ideia à publicação, criamos soluções digitais alinhadas à forma como sua empresa
-              trabalha, com estrutura para continuar evoluindo.
+              Na KO Systems, criamos sistemas para você fechar o caixa, controlar o estoque e
+              organizar pedidos sem repetir trabalho. Conversamos sobre sua rotina, desenvolvemos e
+              colocamos a ferramenta em uso.
             </p>
             <a href={buildWhatsAppUrl()} target="_blank" rel="noreferrer">
               Solicitar orçamento <ArrowRight aria-hidden="true" />

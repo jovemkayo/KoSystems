@@ -9,16 +9,18 @@ import { ProjectShowcase } from "./project-showcase";
 afterEach(cleanup);
 
 describe("ProjectShowcase", () => {
-  it("identifica os quatro projetos por logos com botões acessíveis", () => {
+  it("oferece três estudos de caso com demonstrações acessíveis", () => {
     render(<ProjectShowcase projects={projects} />);
     const buttons = screen.getAllByRole("button");
-    expect(buttons).toHaveLength(4);
+    expect(buttons).toHaveLength(3);
     for (const button of buttons) {
       expect(button).toHaveAccessibleName();
-      expect(button.querySelectorAll("img")).toHaveLength(1);
       expect(button).toHaveAttribute("aria-haspopup", "dialog");
       expect(button.textContent).not.toBe("");
     }
+    expect(screen.getAllByRole("article")).toHaveLength(3);
+    expect(screen.getAllByRole("img")).toHaveLength(3);
+    expect(screen.getByRole("heading", { name: /30 minutos para um clique/i })).toBeVisible();
   });
   it("abre o projeto escolhido e descarta o estado da demonstração ao fechar", async () => {
     render(<ProjectShowcase projects={projects} />);
@@ -41,11 +43,11 @@ describe("ProjectShowcase", () => {
     ).not.toBe(originalFrame);
     fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /gestão de linhas/i }));
-    expect(screen.getByRole("dialog", { name: "Reference RH" })).toBeVisible();
-    expect(screen.getByTitle("Demonstração de Reference RH")).toHaveAttribute(
+    fireEvent.click(screen.getByRole("button", { name: /orderworkbench/i }));
+    expect(screen.getByRole("dialog", { name: "OrderWorkbench" })).toBeVisible();
+    expect(screen.getByTitle("Demonstração de OrderWorkbench")).toHaveAttribute(
       "src",
-      "/demos/reference/index.html",
+      "/demos/orderworkbench/index.html",
     );
     expect(screen.queryByRole("button", { name: /adicionar suco/i })).not.toBeInTheDocument();
   });
@@ -53,7 +55,8 @@ describe("ProjectShowcase", () => {
     render(<ProjectShowcase projects={projects} />);
     fireEvent.click(screen.getByRole("button", { name: /pdv restaurante/i }));
     const dialog = screen.getByRole("dialog");
-    expect(dialog).toHaveAccessibleDescription("Explore as telas");
+    expect(dialog).toHaveAccessibleDescription("Demonstração interativa · Dados fictícios");
+    expect(within(dialog).queryByText("Explore as telas")).not.toBeInTheDocument();
     const frame = within(dialog).getByTitle("Demonstração de Estalagem Restaurante");
     const toggle = within(dialog).getByRole("button", { name: "Conheça a solução" });
     expect(toggle).toHaveAttribute("aria-expanded", "false");

@@ -396,7 +396,11 @@ export default function GlyphPortal({
       );
       section.dataset["gpReady"] = "true";
       section.dataset["gpMotion"] =
-        !reducedMotion.matches && browserFrameSeen && !stalled && target ? "on" : "off";
+        !reducedMotion.matches && !browserFrameSeen
+          ? "pending"
+          : !reducedMotion.matches && !stalled && target
+            ? "on"
+            : "off";
     };
 
     const frame = (time?: number) => {
@@ -524,7 +528,7 @@ export default function GlyphPortal({
       ref={sectionRef}
       className={className}
       style={portalStyle}
-      data-gp-motion="off"
+      data-gp-motion="pending"
     >
       <style>{`
         ${q}{position:relative;display:block;container-type:size;height:calc(var(--gp-length) * var(--gp-height,100svh));background:var(--gp-paper);color:var(--gp-ink);}
@@ -545,7 +549,7 @@ export default function GlyphPortal({
         ${q} [data-gp-select]{min-height:44px;border:1px solid currentColor;border-radius:4px;background:var(--gp-paper);color:inherit;padding:0 34px 0 12px;font:inherit;}
         @media(any-pointer:coarse){${q} [data-gp-touch-picker]{display:flex;}}
         ${q} [data-gp-fallback]{position:absolute;inset:0;display:grid;place-items:center;font-size:min(calc(100cqw / var(--gp-characters)),38cqh);font-weight:${weight};line-height:1;color:var(--gp-field);}
-        ${q}[data-gp-ready=true] [data-gp-fallback]{visibility:hidden;}
+        ${q}[data-gp-ready=true]:not([data-gp-motion=pending]) [data-gp-fallback]{visibility:hidden;}
         ${q} [data-gp-caption]{position:absolute;z-index:6;inset:auto 8% 9%;display:flex;align-items:center;justify-content:space-between;gap:1rem;font:12px/1.4 Arial,sans-serif;opacity:var(--gp-caption,1);pointer-events:var(--gp-caption-hit,auto);}
         ${q} [data-gp-front]{position:absolute;z-index:5;inset:0;opacity:var(--gp-caption,1);pointer-events:none;}
         ${q} [data-gp-front] a,${q} [data-gp-front] button{pointer-events:var(--gp-caption-hit,auto);}
@@ -555,6 +559,9 @@ export default function GlyphPortal({
         ${q} [data-gp-enter]:focus-visible{outline:2px solid currentColor;outline-offset:5px;background:var(--gp-paper);color:var(--gp-ink);padding:0 12px;margin:0 -12px;}
         ${q} [data-gp-content]{box-sizing:border-box;position:absolute;z-index:8;inset:0;min-height:var(--gp-height,100svh);padding:clamp(32px,7%,100px);display:grid;align-content:center;color:var(--gp-foreground);background:var(--gp-field);overflow-wrap:anywhere;}
         ${q}[data-gp-motion=on] [data-gp-pin]{position:sticky;top:0;}
+        ${q}[data-gp-motion=pending] [data-gp-pin]{position:sticky;top:0;}
+        ${q}[data-gp-motion=pending] [data-gp-content]{opacity:0;pointer-events:none;}
+        ${q}[data-gp-motion=pending] [data-gp-field],${q}[data-gp-motion=pending] [data-gp-art]{visibility:hidden;}
         ${q}[data-gp-motion=off] [data-gp-hint]{display:none;}
         ${q}[data-gp-motion=on] [data-gp-content]{opacity:var(--gp-reveal,0);pointer-events:none;}
         ${q}[data-gp-motion=on][data-gp-entered=true] [data-gp-content]{pointer-events:auto;}

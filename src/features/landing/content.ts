@@ -1,7 +1,7 @@
 export type DemoKind = "pos" | "management" | "document" | "lines";
 
 export type ProjectCase = {
-  slug: "pdv-restaurante" | "gestao-integrada" | "leitor-pedidos" | "gestao-linhas";
+  slug: "pdv-restaurante" | "gestao-integrada" | "orderworkbench";
   segment: string;
   clientName: string;
   demoPath: string;
@@ -9,6 +9,9 @@ export type ProjectCase = {
   title: string;
   shortTitle: string;
   summary: string;
+  headline: string;
+  ownership: string;
+  result: string;
   problem: string;
   solution: string;
   capabilities: readonly string[];
@@ -36,11 +39,16 @@ export const projects: readonly ProjectCase[] = [
     previewLogo: "/demos/estalagem/assets/img/logo-estalagem.png",
     title: "PDV para restaurante",
     shortTitle: "PDV restaurante",
-    summary: "Balança, comandas e pagamentos reunidos em um fluxo rápido para a operação diária.",
+    headline: "De cerca de 30 minutos para um clique no fechamento de caixa.",
+    ownership: "Sistema desenvolvido pela KO Systems e de propriedade do Estalagem Restaurante.",
+    result:
+      "Segundo o restaurante, o fechamento passou a economizar de 20 a 30 minutos por dia, de segunda a sexta.",
+    summary:
+      "Criamos um PDV que reúne balança, comandas, pagamentos e relatórios. O caixa consulta o consumo registrado pelo celular e fecha o dia sem somar anotações em papel.",
     problem:
-      "Substituir o controle em papel por uma rotina digital mais prática, reunindo consumo, pagamentos pendentes e fechamento de caixa, com relatórios para acompanhar os resultados e facilitar o envio à contabilidade.",
+      "O fechamento em papel consumia cerca de 30 minutos por dia. Para enviar o faturamento das máquinas de cartão ao contador, o restaurante ainda separava os comprovantes impressos e dependia de um motoboy, com aproximadamente uma hora dedicada a esse envio.",
     solution:
-      "Um ponto de venda que integra balança, comandas e caixa. O consumo é registrado pelo celular e vinculado à comanda do cliente, permitindo ao caixa consultar o valor, registrar o pagamento e acompanhar os valores ainda em aberto.",
+      "Integramos balança, comandas e caixa em um PDV. O consumo registrado pelo celular fica disponível para cobrança, e os relatórios completos podem ser consultados em um clique. Segundo o restaurante, isso economiza de 20 a 30 minutos no fechamento diário e dispensa o envio dos papéis das máquinas por motoboy.",
     capabilities: ["Pesagem e comandas", "Divisão de pagamentos", "Fechamento de caixa"],
     demoKind: "pos",
   },
@@ -52,105 +60,100 @@ export const projects: readonly ProjectCase[] = [
     previewLogo: "/demos/lavandine/assets/logo-lavandine.png",
     title: "Gestão integrada de operação",
     shortTitle: "Gestão integrada",
-    summary: "Produção, estoque, vendas e financeiro conectados em uma única rotina.",
+    headline: "Estoque em quantidade e valor, com o histórico de compra de cada cliente.",
+    ownership: "Sistema desenvolvido pela KO Systems e de propriedade da Lavandine.",
+    result:
+      "A Lavandine passou a visualizar produtos e matérias-primas disponíveis, quanto representam em estoque e o que cada cliente compra.",
+    summary:
+      "Conectamos estoque, produção e vendas para a loja saber o que já tem, planejar novos produtos e consultar as compras dos clientes sem juntar controles separados.",
     problem:
-      "Reunir informações de produção, estoque, vendas e financeiro que estavam separadas, tornando mais simples acompanhar a disponibilidade dos produtos e os resultados da operação.",
+      "A loja não tinha uma visão clara da quantidade e do valor dos produtos e das matérias-primas disponíveis. Isso dificultava aproveitar o estoque existente, planejar novos produtos e acompanhar o que cada cliente comprava.",
     solution:
-      "Uma plataforma de gestão que conecta essas rotinas em um único ambiente, facilita os registros do dia a dia e oferece uma visão organizada do estoque, das vendas e do financeiro.",
+      "Reunimos estoque, produção, vendas e financeiro em um sistema. A equipe consegue consultar quantidades e valores, localizar materiais já disponíveis para novas criações e acompanhar o histórico de compras de cada cliente.",
     capabilities: ["Produção e estoque", "Vendas", "Visão financeira"],
     demoKind: "management",
   },
   {
-    slug: "leitor-pedidos",
-    segment: "Distribuição de alimentos",
-    clientName: "Macaúba Hortifruti",
-    demoPath: "/demos/macauba/index.html",
-    previewLogo: "/brand/macauba-hortifruti-transparent.png",
-    title: "Leitor inteligente de pedidos",
-    shortTitle: "Leitor de pedidos",
-    summary: "PDFs e textos transformados em tabelas prontas para conferência e separação.",
+    slug: "orderworkbench",
+    segment: "Pedidos",
+    clientName: "OrderWorkbench",
+    demoPath: "/demos/orderworkbench/index.html",
+    previewLogo: "/brand/order-workbench.png",
+    title: "Pedidos prontos para conferir e imprimir",
+    shortTitle: "Organização de pedidos",
+    headline: "De 100 minutos para cerca de 10 a 20 minutos em 10 pedidos por dia.",
+    ownership:
+      "Plataforma criada e de propriedade da KO Systems, utilizada por diferentes clientes.",
+    result:
+      "Resultado relatado por um cliente: cerca de 10 pedidos diários, antes com 10 minutos por pedido, agora organizados em aproximadamente 10 a 20 minutos no total.",
+    summary:
+      "Criamos o OrderWorkbench para transformar pedidos recebidos em texto ou PDF em uma tabela editável, pronta para conferir e imprimir, sem redigitar cada item no Excel.",
     problem:
-      "Pedidos recebidos em formatos variados exigiam leitura e digitação manual, aumentando tempo e retrabalho.",
+      "Um dos clientes da plataforma gastava, em média, 10 minutos para passar cada pedido de texto ou PDF para o Excel. Com cerca de 10 pedidos por dia, eram aproximadamente 100 minutos dedicados a organizar e imprimir os pedidos para a preparação.",
     solution:
-      "Um fluxo determinístico que interpreta o conteúdo, organiza os itens e facilita a conferência antes da operação.",
+      "O OrderWorkbench lê o pedido, organiza produtos e quantidades em uma tabela editável e permite imprimir após a conferência. Esse cliente relata fazer os mesmos 10 pedidos em cerca de 10 a 20 minutos no total. O tempo varia conforme o tamanho e o formato dos pedidos.",
     capabilities: ["Leitura de documentos", "Tabela organizada", "Conferência de itens"],
     demoKind: "document",
-  },
-  {
-    slug: "gestao-linhas",
-    segment: "Serviços corporativos",
-    clientName: "Reference RH",
-    demoPath: "/demos/reference/index.html",
-    previewLogo: "/demos/reference/reference-symbol.png",
-    title: "Gestão de linhas e dispositivos",
-    shortTitle: "Gestão de linhas",
-    summary: "Controle centralizado de números, aparelhos, responsáveis e movimentações.",
-    problem:
-      "Identificar os responsáveis por cada linha e aparelho, acompanhar as trocas e controlar quais números estavam disponíveis, ativos, suspensos, banidos ou com restrições no WhatsApp, incluindo as previsões de liberação.",
-    solution:
-      "Um sistema interno que centraliza linhas, aparelhos, responsáveis e status, mantendo o histórico das movimentações e uma visão organizada da disponibilidade dos números na operação.",
-    capabilities: [
-      "Linhas e responsáveis",
-      "Inventário de aparelhos",
-      "Histórico de movimentações",
-    ],
-    demoKind: "lines",
   },
 ];
 
 export const services: readonly ServiceOffering[] = [
   {
     number: "01",
-    title: "Sistemas de gestão e operação",
+    title: "Estoque e financeiro no mesmo lugar",
     description:
-      "Ferramentas que organizam rotinas, dados e decisões em um ambiente criado para o seu negócio.",
+      "Veja entradas, saídas e saldos sem conferir planilhas separadas. Montamos os controles de acordo com os registros que sua equipe precisa fazer.",
   },
   {
     number: "02",
-    title: "Vendas e atendimento",
+    title: "Vendas registradas sem perder o histórico",
     description:
-      "PDVs, lojas virtuais e experiências digitais que tornam a jornada de compra mais simples.",
+      "Criamos PDVs e lojas virtuais que ligam o pedido ao pagamento e guardam o histórico de compra para a equipe consultar.",
   },
   {
     number: "03",
-    title: "Automação de processos",
+    title: "Menos digitação repetida",
     description:
-      "Fluxos que eliminam tarefas repetitivas, reduzem erros e devolvem tempo para a equipe.",
+      "Transformamos tarefas como copiar pedidos e montar relatórios em etapas que o sistema executa, com conferência antes de concluir.",
   },
   {
     number: "04",
-    title: "Integrações e plataformas web",
+    title: "Informações conectadas entre sistemas",
     description:
-      "Soluções conectadas aos serviços que a operação já usa, acessíveis em qualquer dispositivo.",
+      "Conectamos ferramentas para evitar o mesmo cadastro em mais de um lugar. Avaliamos as integrações disponíveis antes de definir o projeto.",
   },
   {
     number: "05",
-    title: "Evolução de sistemas",
+    title: "Seu sistema acompanha as mudanças da empresa",
     description:
-      "Manutenção, novas funcionalidades e acompanhamento de produtos digitais já em uso.",
+      "Corrigimos falhas e desenvolvemos novas funções conforme a necessidade. Escopo, manutenção e próximos passos são combinados com você.",
   },
 ];
 
 export const processSteps: readonly ProcessStep[] = [
   {
     number: "01",
-    title: "Entender",
-    description: "Partimos do problema ou da ideia já definida e mapeamos o que realmente importa.",
+    title: "Definir o que precisa mudar",
+    description:
+      "Você mostra como trabalha hoje. Identificamos a tarefa que consome tempo e combinamos o que o sistema precisa entregar.",
   },
   {
     number: "02",
-    title: "Desenhar",
-    description: "Estruturamos a experiência, as regras e o caminho mais claro para a solução.",
+    title: "Conferir as telas antes de construir",
+    description:
+      "Organizamos as telas e as regras para você avaliar o caminho de uso antes do desenvolvimento.",
   },
   {
     number: "03",
-    title: "Construir",
-    description: "Desenvolvemos em ciclos curtos, com validações durante o processo.",
+    title: "Testar com sua rotina",
+    description:
+      "Desenvolvemos por etapas. Você acompanha as entregas e valida se os registros e as consultas atendem ao trabalho real.",
   },
   {
     number: "04",
-    title: "Publicar e evoluir",
-    description: "Colocamos em operação e combinamos a evolução adequada ao projeto.",
+    title: "Colocar em uso e combinar o suporte",
+    description:
+      "Publicamos o sistema e combinamos manutenção e futuras melhorias de acordo com o projeto, sem deixar essas condições para depois.",
   },
 ];
 

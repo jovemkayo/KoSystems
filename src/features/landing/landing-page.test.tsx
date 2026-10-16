@@ -20,16 +20,15 @@ describe("LandingPage", () => {
   it("reúne a jornada comercial completa sem canais inativos", () => {
     render(<LandingPage />);
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
-    for (const name of [
-      "PDV restaurante",
-      "Gestão integrada",
-      "Leitor de pedidos",
-      "Gestão de linhas",
-    ]) {
+    for (const name of ["PDV restaurante", "Gestão integrada", "OrderWorkbench"]) {
       expect(screen.getByRole("button", { name: new RegExp(name, "i") })).toBeVisible();
     }
-    expect(screen.getByRole("heading", { name: "Sistemas de gestão e operação" })).toBeVisible();
-    expect(screen.getByRole("heading", { name: "Publicar e evoluir" })).toBeVisible();
+    expect(
+      screen.getByRole("heading", { name: "Estoque e financeiro no mesmo lugar" }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("heading", { name: "Colocar em uso e combinar o suporte" }),
+    ).toBeVisible();
     expect(screen.getAllByRole("link", { name: /orçamento/i }).length).toBeGreaterThan(1);
     expect(screen.getByRole("img", { name: "KO Systems" })).toBeVisible();
     expect(screen.getByRole("link", { name: "GitHub" })).toBeVisible();

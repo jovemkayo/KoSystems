@@ -11,7 +11,7 @@ const head = `<meta charset="utf-8"><meta name="viewport" content="width=device-
 const html = (kind) =>
   `<!doctype html><html lang="pt-BR"><head>${head}<title>Demonstração</title>${kind === "lavandine" ? '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=DM+Sans:wght@400;500;600&display=swap">' : ""}</head><body><div id="root"></div><script type="module" src="./main.tsx"></script></body></html>`;
 
-for (const kind of ["lavandine", "reference"]) {
+for (const kind of ["lavandine"]) {
   const demoRoot = resolve(root, "demos", kind);
   const routes =
     kind === "lavandine"
@@ -83,7 +83,29 @@ for (const kind of ["lavandine", "reference"]) {
   });
 }
 
-for (const kind of ["estalagem", "macauba"]) {
+const orderRoot = resolve(root, "demos/orderworkbench");
+await build({
+  configFile: false,
+  root: orderRoot,
+  envDir: false,
+  base: "/demos/orderworkbench/",
+  publicDir: resolve(orderRoot, "public"),
+  plugins: [react()],
+  build: {
+    outDir: resolve(root, "public/demos/orderworkbench"),
+    emptyOutDir: true,
+    sourcemap: false,
+  },
+});
+for (const folder of ["standard_fonts", "cmaps", "wasm"]) {
+  await cp(
+    resolve(root, "node_modules/pdfjs-dist", folder),
+    resolve(root, "public/demos/orderworkbench/pdf-assets", folder),
+    { recursive: true },
+  );
+}
+
+for (const kind of ["estalagem"]) {
   const src = resolve(root, "demos", kind);
   const dst = resolve(root, "public/demos", kind);
   await mkdir(dst, { recursive: true });
@@ -130,4 +152,4 @@ for (const kind of ["estalagem", "macauba"]) {
   await writeFile(resolve(dst, "index.html"), index);
   await cp(resolve(src, "demo-environment.js"), resolve(dst, "demo-environment.js"));
 }
-console.log("Four original frontend demonstrations built without production credentials.");
+console.log("Three original frontend demonstrations built without production credentials.");

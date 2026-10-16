@@ -25,45 +25,54 @@ export function ProjectShowcase({ projects }: { projects: readonly ProjectCase[]
         aria-labelledby="projects-title"
       >
         <header className="section-heading">
-          <h2 id="projects-title">Projetos que já saíram do papel</h2>
-          <p>Demonstrações interativas de alguns projetos desenvolvidos pela KO Systems.</p>
+          <h2 id="projects-title">Menos trabalho manual no caixa, no estoque e nos pedidos.</h2>
+          <p>
+            Veja o que desenvolvemos, os resultados relatados por quem usa e experimente as
+            demonstrações com dados fictícios.
+          </p>
         </header>
 
         <div className="project-grid">
           {projects.map((project) => {
             return (
-              <button
+              <article
+                className="project-case"
                 key={project.slug}
-                type="button"
-                className="project-card"
-                aria-label={`${project.clientName} · ${project.shortTitle}`}
-                aria-haspopup="dialog"
-                onClick={(event) => {
-                  opener.current = event.currentTarget;
-                  setDemoRevision(0);
-                  setStoryOpen(false);
-                  setSelectedSlug(project.slug);
-                }}
+                aria-labelledby={`${project.slug}-title`}
               >
-                <span className="project-preview" aria-hidden="true">
-                  {project.previewLogo ? (
+                <div className="project-case-brand">
+                  {project.previewLogo && (
                     <img
-                      className="project-client-logo"
                       src={project.previewLogo}
-                      alt=""
+                      alt={project.clientName}
                       loading="lazy"
+                      width="260"
+                      height="200"
                     />
-                  ) : (
-                    <span className="project-client-wordmark">{project.clientName}</span>
                   )}
-                </span>
-                <span className="project-card-copy">
-                  <span className="project-segment">{project.segment}</span>
-                  <strong>{project.clientName}</strong>
-                  <span className="project-card-system">{project.shortTitle}</span>
-                  <span>{project.summary}</span>
-                </span>
-              </button>
+                </div>
+                <div className="project-case-copy">
+                  <h3 id={`${project.slug}-title`}>{project.headline}</h3>
+                  <p>{project.summary}</p>
+                  <p className="project-case-result">{project.result}</p>
+                  <p className="project-case-ownership">{project.ownership}</p>
+                  <button
+                    key={project.slug}
+                    type="button"
+                    className="project-case-open"
+                    aria-label={`${project.clientName} · ${project.shortTitle}`}
+                    aria-haspopup="dialog"
+                    onClick={(event) => {
+                      opener.current = event.currentTarget;
+                      setDemoRevision(0);
+                      setStoryOpen(false);
+                      setSelectedSlug(project.slug);
+                    }}
+                  >
+                    Experimentar {project.clientName}
+                  </button>
+                </div>
+              </article>
             );
           })}
         </div>
@@ -79,13 +88,12 @@ export function ProjectShowcase({ projects }: { projects: readonly ProjectCase[]
               }}
             >
               <div className="project-modal-bar">
-                <span className="project-modal-context">
-                  Demonstração interativa · Dados fictícios
-                </span>
-                <span className="project-modal-mobile-title" aria-hidden="true">
-                  {selected.clientName}
-                  <small>Dados fictícios</small>
-                </span>
+                <div className="project-modal-heading">
+                  <Dialog.Title>{selected.clientName}</Dialog.Title>
+                  <Dialog.Description className="project-modal-context">
+                    Demonstração interativa · Dados fictícios
+                  </Dialog.Description>
+                </div>
                 <button
                   type="button"
                   className="project-demo-reset"
@@ -98,10 +106,6 @@ export function ProjectShowcase({ projects }: { projects: readonly ProjectCase[]
                 <Dialog.Close className="project-modal-close" aria-label="Fechar projeto">
                   <X aria-hidden="true" />
                 </Dialog.Close>
-              </div>
-              <div className="original-project-summary">
-                <Dialog.Title>{selected.clientName}</Dialog.Title>
-                <Dialog.Description>Explore as telas</Dialog.Description>
               </div>
               <div className="original-project-body">
                 <button

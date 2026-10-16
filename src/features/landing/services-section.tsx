@@ -72,7 +72,9 @@ export function ServicesSection() {
       <div ref={stickyRef} className="services-sticky">
         <header className="section-heading">
           <div>
-            <h2 id="services-title">Tecnologia aplicada ao jeito que sua empresa trabalha.</h2>
+            <h2 id="services-title">
+              Registre uma vez. Consulte o que precisa sem refazer o trabalho.
+            </h2>
           </div>
         </header>
         <div

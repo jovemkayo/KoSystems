@@ -8,7 +8,7 @@ export function ProcessSection() {
       aria-labelledby="process-title"
     >
       <header className="section-heading">
-        <h2 id="process-title">Do problema à solução em operação.</h2>
+        <h2 id="process-title">Você acompanha o desenvolvimento antes de mudar sua rotina.</h2>
       </header>
       <ol className="process-grid">
         {processSteps.map((step) => (

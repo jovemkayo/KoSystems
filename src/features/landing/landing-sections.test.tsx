@@ -37,7 +37,12 @@ describe("seções institucionais", () => {
     rerender(<ProcessSection />);
     expect(
       screen.getAllByRole("heading", { level: 3 }).map((heading) => heading.textContent),
-    ).toEqual(["Entender", "Desenhar", "Construir", "Publicar e evoluir"]);
+    ).toEqual([
+      "Definir o que precisa mudar",
+      "Conferir as telas antes de construir",
+      "Testar com sua rotina",
+      "Colocar em uso e combinar o suporte",
+    ]);
   });
 
   it("mantém apenas canais institucionais ativos", () => {
@@ -67,7 +72,7 @@ describe("seções institucionais", () => {
     expect(screen.queryByRole("link", { name: "Sobre mim" })).not.toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
-        name: "Tem um problema para resolver ou uma ideia para tirar do papel?",
+        name: "Conte qual tarefa toma seu tempo. Vamos avaliar como simplificar.",
       }),
     ).toBeVisible();
     expect(screen.getByRole("link", { name: "Solicitar orçamento" })).toHaveAttribute(

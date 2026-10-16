@@ -1,0 +1,64 @@
+.customer-input {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid #dce3d5;
+  border-radius: 8px;
+  background: #fafbf8;
+  font-size: 13px;
+  color: #304435;
+  margin-bottom: 20px;
+}
+.file-button {
+  display: flex !important;
+  justify-content: center;
+  gap: 24px;
+  align-items: center;
+  cursor: pointer;
+  min-height: 44px;
+  border: 1px solid #b8cbb9;
+  border-radius: 9px;
+  color: #31533f;
+  background: #f2f6ee;
+  margin-top: 10px;
+  font-size: 12px !important;
+}
+.file-button:hover {
+  background: #eaf1e2;
+}
+.file-button:has(+ input:focus-visible) {
+  outline: 3px solid #bd673d;
+  outline-offset: 3px;
+}
+.pdf-help {
+  font-size: 10px;
+  color: #7d8c75;
+  text-align: center;
+  line-height: 1.6;
+  margin: 10px 0;
+}
+.reading-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #4d6f45;
+  padding: 10px 0;
+}
+.reading-status button {
+  background: none;
+  border: 0;
+  color: #9b5536;
+  text-decoration: underline;
+}
+.secondary {
+  color: #31543e;
+  background: #edf3e7;
+  border: 1px solid #c7d6be;
+}
+.secondary:hover:not(:disabled) {
+  background: #e2ecd9;
+}
+
+@media (max-width:760px) {
+ .customer-input {font-size:16px;}
+}

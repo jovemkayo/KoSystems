@@ -9,7 +9,10 @@ export function SiteFooter() {
     <footer className="site-footer">
       <div className="footer-main">
         <BrandMark surface="dark" className="footer-logo" />
-        <p>Sistemas e softwares personalizados para operações que querem trabalhar melhor.</p>
+        <p>
+          KO Systems. Desenvolvemos sistemas para reduzir o trabalho manual no dia a dia da sua
+          empresa.
+        </p>
         <div className="footer-social" aria-label="Redes sociais e contato">
           <a href={company.instagramUrl} target="_blank" rel="noreferrer" aria-label="Instagram">
             <Instagram aria-hidden="true" />

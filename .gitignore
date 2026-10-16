@@ -21,6 +21,7 @@ dist-ssr
 .dev.vars
 public/demos/
 demos/*/main.tsx
+!demos/orderworkbench/main.tsx
 demos/lavandine/index.html
 demos/reference/index.html
 
