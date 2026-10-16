@@ -566,7 +566,7 @@ a { color: inherit; }
 
 /* Individual case studies; results are part of the main reading hierarchy. */
 .projects-section > .project-grid { display: flex; flex-direction: column; gap: 40px; flex: none; }
-.project-case { display: grid; grid-template-columns: minmax(180px, .6fr) minmax(0, 1.4fr); align-items: start; gap: clamp(28px, 4vw, 64px); min-height: min(680px, 78svh); padding: clamp(28px, 3vw, 48px); background: white; border: 1px solid var(--ko-line); border-radius: 24px; }
+.project-case { display: grid; grid-template-columns: minmax(180px, .6fr) minmax(0, 1.4fr); align-items: center; gap: clamp(28px, 4vw, 64px); min-height: min(680px, 78svh); padding: clamp(28px, 3vw, 48px); background: white; border: 1px solid var(--ko-line); border-radius: 24px; }
 .project-case-brand { display: grid; place-items: center; align-self: center; min-width: 0; }
 .project-case-brand img { display: block; width: min(100%, 300px); height: 220px; object-fit: contain; }
 .project-case-copy { min-width: 0; text-align: center; }
