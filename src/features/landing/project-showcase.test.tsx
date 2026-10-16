@@ -14,7 +14,7 @@ describe("ProjectShowcase", () => {
     expect(container.querySelectorAll("blockquote")).toHaveLength(3);
     expect(screen.getAllByRole("img")).toHaveLength(3);
     expect(screen.queryByText(/de propriedade/)).not.toBeInTheDocument();
-    expect(screen.getByText(/Eu levava cerca de uma hora e meia/)).toBeVisible();
+    expect(screen.getByText(/Eu levava cerca de 1h30min/)).toBeVisible();
   });
   it("oferece três estudos de caso com demonstrações acessíveis", () => {
     render(<ProjectShowcase projects={projects} />);

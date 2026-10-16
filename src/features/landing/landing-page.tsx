@@ -33,7 +33,8 @@ export function LandingPage() {
           <h1>Menos planilhas para preencher. Mais tempo para cuidar da sua empresa.</h1>
           <div className="hero-reveal-bottom">
             <a href={buildWhatsAppUrl()} target="_blank" rel="noreferrer">
-              Solicitar orçamento <ArrowRight aria-hidden="true" />
+              <span>Solicitar orçamento</span>
+              <ArrowRight aria-hidden="true" />
             </a>
           </div>
         </div>

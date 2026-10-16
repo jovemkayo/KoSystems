@@ -41,12 +41,12 @@ export const projects: readonly ProjectCase[] = [
     headline: "De cerca de 30 minutos para fechar o caixa em um clique.",
     testimonial: {
       quote:
-        "Passei a economizar cerca de 30 minutos por dia com o PDV. Com poucos cliques, consulto o fechamento de caixa. Também ficou mais fácil acompanhar as vendas, comparar os resultados e organizar o financeiro.",
+        "Passei a economizar cerca de 30 minutos por dia com o PDV. Com poucos cliques, consulto o fechamento de caixa.\nTambém ficou mais fácil acompanhar as vendas, comparar os resultados e organizar o financeiro.",
       name: "Edina Alves",
       role: "Proprietária",
     },
     summary:
-      "Reunimos balança, comandas e pagamentos em um PDV que também organiza o financeiro. O restaurante acompanha quanto vende por dia, semana, mês ou ano e identifica os períodos de melhor resultado, sem juntar anotações em papel.",
+      "Reunimos balança, comandas e pagamentos em um PDV que também organiza o financeiro. O restaurante acompanha quanto vende e identifica os períodos de melhor resultado, sem juntar anotações em papel.",
     problem:
       "O fechamento em papel consumia cerca de 30 minutos por dia e dificultava reunir os números de vendas e acompanhar o financeiro.",
     solution:
@@ -89,12 +89,12 @@ export const projects: readonly ProjectCase[] = [
     headline: "Cerca de 75 minutos por dia a menos redigitando pedidos.",
     testimonial: {
       quote:
-        "Eu levava cerca de uma hora e meia por dia redigitando pedidos. Com o OrderWorkbench, passei a fazer esse trabalho em aproximadamente 15 minutos, com mais tempo disponível para o restante da operação.",
+        "Eu levava cerca de 1h30min por dia redigitando pedidos. Com o OrderWorkbench, passei a fazer esse trabalho em aproximadamente 15 minutos, com mais tempo disponível para o restante da operação.",
       name: "Rogério Oliveira",
       role: "Cliente",
     },
     summary:
-      "Criamos o OrderWorkbench para transformar pedidos recebidos em texto ou PDF em uma tabela editável, pronta para conferir e imprimir, sem redigitar cada item no Excel.",
+      "O OrderWorkbench é um produto da KO Systems, feito para transformar pedidos recebidos em texto ou PDF em uma tabela editável, pronta para conferir e imprimir, sem redigitar cada item no Excel.",
     problem:
       "Um dos clientes da plataforma dedicava cerca de uma hora e meia por dia a redigitar os pedidos recebidos em texto ou PDF no Excel, antes de imprimir para a preparação.",
     solution:

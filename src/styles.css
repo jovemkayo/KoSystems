@@ -258,7 +258,7 @@ a { color: inherit; }
 .demo-table-wrap { overflow-x: auto; }.demo-table-wrap table { width: 100%; border-collapse: collapse; font-size: 11px; }.demo-table-wrap th, .demo-table-wrap td { border-bottom: 1px solid #dfe4ec; padding: 8px 5px; text-align: left; white-space: nowrap; }
 .case-blueprint { display: grid; gap: 10px; }.case-blueprint-label { color: #697487; font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }.case-blueprint > div { display: grid; grid-template-columns: 42px 1fr; column-gap: 12px; border: 1px solid #e0e5ed; border-radius: 11px; padding: 15px; }.case-blueprint svg { grid-row: 1 / 3; align-self: center; width: 20px; }.case-blueprint span { color: #727d90; font-size: 12px; }
 
-.services-section { width: 100%; max-width: none; height: 340svh; background: #f6f7f9; padding-block: 0; scroll-margin-top: 0; }
+.services-section { width: 100%; max-width: none; height: 240svh; background: #f6f7f9; padding-block: 0; scroll-margin-top: 0; }
 .services-sticky { position: sticky; top: 0; height: 100svh; min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: clamp(16px, 3svh, 32px); padding-block: clamp(24px, 5svh, 48px); }
 .services-section .section-heading { width: 100%; margin-inline: auto; text-align: center; }
 .services-section .section-heading h2 { font-size: clamp(36px, 4.1vw, 60px); margin: 0; }
@@ -276,7 +276,7 @@ a { color: inherit; }
 .service-row svg { grid-column: 3; grid-row: 1; }
 .services-list[data-focus-active="true"] .service-row[data-focused="false"] { filter: blur(1.5px); }
 .service-row[data-focused="true"], .service-row:focus-within { filter: none; opacity: 1; }
-.services-list[data-focus-active="true"] .service-row[data-settled="true"] { transform: translateY(-50%); backface-visibility: visible; filter: none; opacity: 1; }
+.services-list[data-focus-active="true"] .service-row[data-focused="true"] { transform: translateY(-50%) translateY(var(--service-y, 0px)); backface-visibility: visible; filter: none; opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
   .services-list[data-focus-active="true"] .service-row[data-focused] { filter: none; transform: translateY(-50%) translateY(var(--service-y, 0px)); }
 }
@@ -569,13 +569,13 @@ a { color: inherit; }
 .project-case { display: grid; grid-template-columns: minmax(180px, .6fr) minmax(0, 1.4fr); align-items: start; gap: clamp(28px, 4vw, 64px); min-height: min(680px, 78svh); padding: clamp(28px, 3vw, 48px); background: white; border: 1px solid var(--ko-line); border-radius: 24px; }
 .project-case-brand { display: grid; place-items: center; align-self: center; min-width: 0; }
 .project-case-brand img { display: block; width: min(100%, 300px); height: 220px; object-fit: contain; }
-.project-case-copy { min-width: 0; }
+.project-case-copy { min-width: 0; text-align: center; }
 .project-case-copy h3 { font-size: clamp(28px, 3.2vw, 46px); line-height: 1.12; letter-spacing: -.04em; text-wrap: balance; margin: 0 0 18px; }
-.project-case-copy p { max-width: 65ch; font-size: 16px; line-height: 1.65; color: #526078; margin: 0 0 20px; text-align: left; text-wrap: balance; }
+.project-case-copy p { max-width: 65ch; font-size: 16px; line-height: 1.65; color: #526078; margin: 0 auto 20px; text-align: center; text-wrap: balance; }
 .project-case-copy .project-case-summary { color: var(--ko-navy); }
 .project-testimonial { margin: 0 0 22px; padding: 20px; border: 1px solid var(--ko-line); border-radius: 16px; background: #f6f7f9; color: var(--ko-navy); }
-.project-testimonial blockquote { margin: 0; padding-bottom: 16px; border-bottom: 1px solid var(--ko-line); font-size: 15px; line-height: 1.65; text-wrap: pretty; }
-.project-testimonial figcaption { display: flex; align-items: center; gap: 12px; margin-top: 16px; font-size: 14px; font-weight: 700; }
+.project-testimonial blockquote { margin: 0; padding-bottom: 16px; border-bottom: 1px solid var(--ko-line); font-size: 15px; line-height: 1.65; text-wrap: pretty; white-space: pre-line; }
+.project-testimonial figcaption { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 16px; font-size: 14px; font-weight: 700; }
 .project-testimonial figcaption img, .testimonial-avatar { flex: none; width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
 .testimonial-avatar { display: grid; place-items: center; background: #e5eaf2; font-size: 12px; }
 .testimonial-role { display: block; margin-top: 2px; font-size: 12px; font-weight: 500; color: #526078; }
@@ -607,7 +607,7 @@ a { color: inherit; }
   .back-to-top { display: flex; }
 }
 .back-to-top svg { width: 16px; height: 16px; }
-.back-to-top:hover { text-decoration: underline; text-underline-offset: 4px; }
+.back-to-top, .back-to-top:hover, .back-to-top:active, .back-to-top:focus { text-decoration: none; }
 .back-to-top:focus-visible { outline: 2px solid var(--ko-navy); outline-offset: 4px; }
 .footer-main { max-width: 360px; grid-template-columns: auto auto; justify-content: center; gap: 16px; }
 .footer-main .footer-social { grid-column: auto; }
@@ -621,8 +621,10 @@ a { color: inherit; }
   .footer-bottom { flex-direction: row; gap: 8px; font-size: 10px; }
 }
 
-.contact-copy > a { position: relative; display: inline-flex; align-items: center; justify-content: center; padding-inline: 48px; min-height: 52px; line-height: 1.4; text-align: center; }
-.contact-copy > a svg { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); }
+.contact-copy > a, .hero-reveal-bottom > a { display: inline-grid; grid-template-columns: 17px minmax(0, 1fr) 17px; align-items: center; justify-content: center; gap: 12px; padding: 16px 20px; min-height: 52px; line-height: 20px; text-align: center; }
+.contact-copy > a::before, .hero-reveal-bottom > a::before { content: ""; grid-column: 1; grid-row: 1; }
+.contact-copy > a > span, .hero-reveal-bottom > a > span { grid-column: 2; grid-row: 1; }
+.contact-copy > a svg, .hero-reveal-bottom > a svg { position: static; transform: none; grid-column: 3; grid-row: 1; justify-self: center; }
 @media (min-width: 1100px) {
   .process-grid h3 { font-size: clamp(18px, 1.5vw, 24px); letter-spacing: -.025em; }
 }

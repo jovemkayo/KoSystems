@@ -12,7 +12,7 @@ afterEach(() => {
 });
 
 it.each([800, 844, 667])(
-  "holds every service centered while scrolling at height %i",
+  "moves continuously through intermediate services with a straight focused item at height %i",
   async (viewportHeight) => {
     let offset = -100;
     const sectionHeight = viewportHeight + 1800;
@@ -59,23 +59,26 @@ it.each([800, 844, 667])(
       expect(rows[index]!.style.getPropertyValue("--service-angle")).toBe("0deg");
     };
     centered(0);
-    for (const [index, start, end] of [
-      [0, 50, 150],
-      [1, 450, 550],
-      [2, 850, 950],
-      [3, 1250, 1350],
-      [4, 1650, 1750],
-    ] as const) {
-      await scrollTo(start);
-      centered(index);
-      await scrollTo(end);
-      centered(index);
+    await scrollTo(50);
+    centered(0);
+    for (const index of [1, 2, 3]) {
+      // Hand-selected samples around each intermediate service. Unlike a
+      // reading plateau, another page scroll must change its vertical offset.
+      const sample = [0, 500, 900, 1300][index]!;
+      await scrollTo(sample);
+      expect(rows[index]!.getAttribute("data-focused")).toBe("true");
+      expect(rows[index]!.style.getPropertyValue("--service-angle")).toBe("0deg");
+      const previousY = rows[index]!.style.getPropertyValue("--service-y");
+      await scrollTo(sample + 20);
+      expect(rows[index]!.getAttribute("data-focused")).toBe("true");
+      expect(rows[index]!.style.getPropertyValue("--service-y")).not.toBe(previousY);
+      expect(rows[index]!.style.getPropertyValue("--service-angle")).toBe("0deg");
     }
     await scrollTo(1100);
     expect(parseFloat(rows[2]!.style.getPropertyValue("--service-y"))).toBeLessThan(0);
     expect(parseFloat(rows[3]!.style.getPropertyValue("--service-y"))).toBeGreaterThan(0);
-    await scrollTo(500);
-    centered(1);
+    await scrollTo(50);
+    centered(0);
     await scrollTo(-100);
     centered(0);
     await scrollTo(2000);
