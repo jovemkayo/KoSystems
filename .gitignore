@@ -35,3 +35,8 @@ demos/reference/index.html
 *.njsproj
 *.sln
 *.sw?
+
+# Configurações locais
+.env
+.env.*
+!.env.example
