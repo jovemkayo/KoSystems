@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
-import { ContactSection } from "./contact-section";
+import { BackToTop } from "./back-to-top";
 
 afterEach(() => {
   cleanup();
@@ -11,7 +11,11 @@ afterEach(() => {
 
 it.each([false, true])("volta à hero respeitando movimento reduzido: %s", (reduced) => {
   const frames: FrameRequestCallback[] = [];
-  vi.stubGlobal("matchMedia", () => ({ matches: reduced }));
+  vi.stubGlobal("matchMedia", (query: string) => ({
+    matches: query.includes("prefers-reduced-motion") ? reduced : true,
+    addEventListener() {},
+    removeEventListener() {},
+  }));
   vi.stubGlobal("scrollY", 8000);
   vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => {
     frames.push(cb);
@@ -19,7 +23,7 @@ it.each([false, true])("volta à hero respeitando movimento reduzido: %s", (redu
   });
   vi.stubGlobal("cancelAnimationFrame", vi.fn());
   const scroll = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
-  render(<ContactSection />);
+  render(<BackToTop />);
   fireEvent.click(screen.getByRole("button", { name: "Voltar ao topo" }));
   if (!reduced) {
     act(() => frames.shift()!(0));
@@ -30,4 +34,14 @@ it.each([false, true])("volta à hero respeitando movimento reduzido: %s", (redu
     act(() => frames.shift()!(1000));
   }
   expect(scroll).toHaveBeenLastCalledWith({ top: 0, behavior: "instant" });
+});
+
+it.each(["celular", "tablet"])("não oferece o controle na versão de %s", () => {
+  vi.stubGlobal("matchMedia", () => ({
+    matches: false,
+    addEventListener() {},
+    removeEventListener() {},
+  }));
+  render(<BackToTop />);
+  expect(screen.queryByRole("button", { name: "Voltar ao topo" })).toBeNull();
 });

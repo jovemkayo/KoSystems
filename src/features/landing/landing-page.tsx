@@ -9,6 +9,7 @@ import { ProjectShowcase } from "./project-showcase";
 import { ServicesSection } from "./services-section";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
+import { BackToTop } from "./back-to-top";
 
 export function LandingPage() {
   return (
@@ -48,6 +49,7 @@ export function LandingPage() {
       <ServicesSection />
       <ContactSection />
       <SiteFooter />
+      <BackToTop />
     </main>
   );
 }

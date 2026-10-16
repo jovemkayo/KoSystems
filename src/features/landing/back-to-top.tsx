@@ -1,9 +1,19 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowUp } from "lucide-react";
 
 export function BackToTop() {
   const frame = useRef(0);
+  const [desktop, setDesktop] = useState(false);
   useEffect(() => {
+    if (!window.matchMedia) return;
+    const media = window.matchMedia("(min-width: 1025px) and (hover: hover) and (pointer: fine)");
+    const update = () => setDesktop(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+  useEffect(() => {
+    if (!desktop) return;
     const cancel = () => {
       window.cancelAnimationFrame(frame.current);
       frame.current = 0;
@@ -17,7 +27,7 @@ export function BackToTop() {
       window.removeEventListener("touchstart", cancel);
       window.removeEventListener("keydown", cancel);
     };
-  }, []);
+  }, [desktop]);
 
   function goToTop() {
     window.cancelAnimationFrame(frame.current);
@@ -44,6 +54,7 @@ export function BackToTop() {
     frame.current = window.requestAnimationFrame(step);
   }
 
+  if (!desktop) return null;
   return (
     <button type="button" className="back-to-top" onClick={goToTop}>
       Voltar ao topo <ArrowUp aria-hidden="true" />
