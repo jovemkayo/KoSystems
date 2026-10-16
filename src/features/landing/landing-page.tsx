@@ -9,7 +9,6 @@ import { ProjectShowcase } from "./project-showcase";
 import { ServicesSection } from "./services-section";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
-import { BackToTop } from "./back-to-top";
 
 export function LandingPage() {
   return (
@@ -33,11 +32,6 @@ export function LandingPage() {
         <div className="hero-reveal">
           <h1>Menos planilhas para preencher. Mais tempo para cuidar da sua empresa.</h1>
           <div className="hero-reveal-bottom">
-            <p>
-              Na KO Systems, criamos sistemas para você fechar o caixa, controlar o estoque e
-              organizar pedidos sem repetir trabalho. Conversamos sobre sua rotina, desenvolvemos e
-              colocamos a ferramenta em uso.
-            </p>
             <a href={buildWhatsAppUrl()} target="_blank" rel="noreferrer">
               Solicitar orçamento <ArrowRight aria-hidden="true" />
             </a>
@@ -49,7 +43,6 @@ export function LandingPage() {
       <ServicesSection />
       <ContactSection />
       <SiteFooter />
-      <BackToTop />
     </main>
   );
 }

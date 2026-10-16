@@ -20,10 +20,10 @@ describe("conteúdo público", () => {
   it("mantém a oferta e o processo definidos", () => {
     expect(services).toHaveLength(5);
     expect(processSteps.map((step) => step.title)).toEqual([
-      "Definir o que precisa mudar",
-      "Conferir as telas antes de construir",
+      "Definir o que vai mudar",
+      "Conferir antes de construir",
       "Testar com sua rotina",
-      "Colocar em uso e combinar o suporte",
+      "Colocar em uso",
     ]);
   });
 });

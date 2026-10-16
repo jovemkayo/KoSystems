@@ -38,10 +38,10 @@ describe("seções institucionais", () => {
     expect(
       screen.getAllByRole("heading", { level: 3 }).map((heading) => heading.textContent),
     ).toEqual([
-      "Definir o que precisa mudar",
-      "Conferir as telas antes de construir",
+      "Definir o que vai mudar",
+      "Conferir antes de construir",
       "Testar com sua rotina",
-      "Colocar em uso e combinar o suporte",
+      "Colocar em uso",
     ]);
   });
 
@@ -72,7 +72,7 @@ describe("seções institucionais", () => {
     expect(screen.queryByRole("link", { name: "Sobre mim" })).not.toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
-        name: "Conte qual tarefa toma seu tempo. Vamos avaliar como simplificar.",
+        name: "Tem um problema para resolver ou uma ideia para tirar do papel?",
       }),
     ).toBeVisible();
     expect(screen.getByRole("link", { name: "Solicitar orçamento" })).toHaveAttribute(

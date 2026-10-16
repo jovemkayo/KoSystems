@@ -2,6 +2,19 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { BackToTop } from "./back-to-top";
+import { ContactSection } from "./contact-section";
+
+it("mantém o controle dentro da seção de orçamento", () => {
+  vi.stubGlobal("matchMedia", () => ({
+    matches: true,
+    addEventListener() {},
+    removeEventListener() {},
+  }));
+  render(<ContactSection />);
+  expect(screen.getByRole("button", { name: "Voltar ao topo" }).closest("section")?.id).toBe(
+    "contato",
+  );
+});
 
 afterEach(() => {
   cleanup();

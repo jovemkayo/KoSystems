@@ -9,6 +9,13 @@ import { ProjectShowcase } from "./project-showcase";
 afterEach(cleanup);
 
 describe("ProjectShowcase", () => {
+  it("apresenta três relatos sem fotos inventadas nem textos de propriedade", () => {
+    const { container } = render(<ProjectShowcase projects={projects} />);
+    expect(container.querySelectorAll("blockquote")).toHaveLength(3);
+    expect(screen.getAllByRole("img")).toHaveLength(3);
+    expect(screen.queryByText(/de propriedade/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Eu levava cerca de uma hora e meia/)).toBeVisible();
+  });
   it("oferece três estudos de caso com demonstrações acessíveis", () => {
     render(<ProjectShowcase projects={projects} />);
     const buttons = screen.getAllByRole("button");

@@ -26,9 +26,7 @@ describe("LandingPage", () => {
     expect(
       screen.getByRole("heading", { name: "Estoque e financeiro no mesmo lugar" }),
     ).toBeVisible();
-    expect(
-      screen.getByRole("heading", { name: "Colocar em uso e combinar o suporte" }),
-    ).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Colocar em uso" })).toBeVisible();
     expect(screen.getAllByRole("link", { name: /orçamento/i }).length).toBeGreaterThan(1);
     expect(screen.getByRole("img", { name: "KO Systems" })).toBeVisible();
     expect(screen.getByRole("link", { name: "GitHub" })).toBeVisible();

@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { RotateCcw, X } from "lucide-react";
+import { Testimonial } from "@/components/ui/testimonial";
 
 import type { ProjectCase } from "./content";
 
@@ -24,11 +25,9 @@ export function ProjectShowcase({ projects }: { projects: readonly ProjectCase[]
         aria-labelledby="projects-title"
       >
         <header className="section-heading">
-          <h2 id="projects-title">Menos trabalho manual no caixa, no estoque e nos pedidos.</h2>
-          <p>
-            Veja o que desenvolvemos, os resultados relatados por quem usa e interaja com as
-            demonstrações com dados fictícios.
-          </p>
+          <h2 id="projects-title">
+            O trabalho da sua equipe não precisa depender de controles espalhados.
+          </h2>
         </header>
 
         <div className="project-grid">
@@ -52,11 +51,8 @@ export function ProjectShowcase({ projects }: { projects: readonly ProjectCase[]
                 </div>
                 <div className="project-case-copy">
                   <h3 id={`${project.slug}-title`}>{project.headline}</h3>
-                  <p>{project.summary}</p>
-                  <p className="project-case-result">{project.result}</p>
-                  {project.ownership && (
-                    <p className="project-case-ownership">{project.ownership}</p>
-                  )}
+                  <p className="project-case-summary">{project.summary}</p>
+                  <Testimonial {...project.testimonial} />
                   <button
                     key={project.slug}
                     type="button"

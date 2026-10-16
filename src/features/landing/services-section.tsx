@@ -21,23 +21,24 @@ export function ServicesSection() {
       // Use the sticky panel's layout height, not transformed text geometry or
       // Safari's changing visual viewport as its address bar opens and closes.
       const panelHeight = sticky.offsetHeight || window.innerHeight;
-      // Let the full panel settle into view before rotating its services.
-      const entryPause = panelHeight * 0.2;
-      const exitPause = panelHeight * 0.2;
+      // Each service gets a stationary reading interval, including the last
+      // one before the sticky panel releases. Rotation starts only once the
+      // complete panel has entered the viewport.
       const progress = Math.max(
         0,
-        Math.min(
-          1,
-          (-bounds.top - entryPause) /
-            Math.max(1, bounds.height - panelHeight - entryPause - exitPause),
-        ),
+        Math.min(1, -bounds.top / Math.max(1, bounds.height - panelHeight)),
       );
-      const position = progress * (rows.length - 1);
+      const phase = progress * (rows.length * 2 - 1);
+      const current = Math.min(rows.length - 1, Math.floor(phase / 2));
+      const transition = Math.max(0, Math.min(1, phase - current * 2 - 1));
+      const eased = transition * transition * (3 - 2 * transition);
+      const position = current + eased;
       const radius = Math.max(210, list.clientHeight * 0.55);
       rows.forEach((row, index) => {
         const distance = index - position;
         const angle = Math.max(-90, Math.min(90, distance * 48));
         const radians = (angle * Math.PI) / 180;
+        row.dataset["settled"] = String(Math.abs(distance) < 0.0001);
         row.style.setProperty("--service-y", `${radius * Math.sin(radians)}px`);
         row.style.setProperty("--service-z", `${radius * (Math.cos(radians) - 1)}px`);
         row.style.setProperty("--service-angle", `${-angle}deg`);
@@ -74,9 +75,7 @@ export function ServicesSection() {
       <div ref={stickyRef} className="services-sticky">
         <header className="section-heading">
           <div>
-            <h2 id="services-title">
-              Registre uma vez. Consulte o que precisa sem refazer o trabalho.
-            </h2>
+            <h2 id="services-title">O que sua equipe faz à mão pode virar parte do sistema.</h2>
           </div>
         </header>
         <div

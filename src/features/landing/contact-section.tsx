@@ -1,6 +1,7 @@
 import { ArrowUpRight } from "lucide-react";
 import { BrandMark } from "@/components/brand/brand-mark";
 import { buildWhatsAppUrl } from "./contact";
+import { BackToTop } from "./back-to-top";
 
 export function ContactSection() {
   return (
@@ -9,13 +10,13 @@ export function ContactSection() {
         <BrandMark surface="light" format="symbol" className="contact-symbol" />
       </div>
       <div className="contact-copy">
-        <h2 id="contact-title">
-          Conte qual tarefa toma seu tempo. Vamos avaliar como simplificar.
-        </h2>
+        <h2 id="contact-title">Tem um problema para resolver ou uma ideia para tirar do papel?</h2>
         <a href={buildWhatsAppUrl()} target="_blank" rel="noreferrer">
-          Solicitar orçamento <ArrowUpRight aria-hidden="true" />
+          <span>Solicitar orçamento</span>
+          <ArrowUpRight aria-hidden="true" />
         </a>
       </div>
+      <BackToTop />
     </section>
   );
 }

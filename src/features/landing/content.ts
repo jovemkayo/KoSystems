@@ -10,8 +10,7 @@ export type ProjectCase = {
   shortTitle: string;
   summary: string;
   headline: string;
-  ownership: string;
-  result: string;
+  testimonial: { quote: string; name: string; role: string; avatarSrc?: string };
   problem: string;
   solution: string;
   capabilities: readonly string[];
@@ -39,10 +38,13 @@ export const projects: readonly ProjectCase[] = [
     previewLogo: "/demos/estalagem/assets/img/logo-estalagem.png",
     title: "PDV para restaurante",
     shortTitle: "PDV restaurante",
-    headline: "De cerca de 30 minutos para fechar o caixa a um clique.",
-    ownership: "",
-    result:
-      "Segundo o restaurante, o fechamento de caixa passou a economizar de 20 a 30 minutos por dia, de segunda a sábado. Com as informações reunidas, ficou mais fácil acompanhar as vendas, comparar os resultados e organizar o financeiro.",
+    headline: "De cerca de 30 minutos para fechar o caixa em um clique.",
+    testimonial: {
+      quote:
+        "Passei a economizar cerca de 30 minutos por dia com o PDV. Com poucos cliques, consulto o fechamento de caixa. Também ficou mais fácil acompanhar as vendas, comparar os resultados e organizar o financeiro.",
+      name: "Edina Alves",
+      role: "Proprietária",
+    },
     summary:
       "Reunimos balança, comandas e pagamentos em um PDV que também organiza o financeiro. O restaurante acompanha quanto vende por dia, semana, mês ou ano e identifica os períodos de melhor resultado, sem juntar anotações em papel.",
     problem:
@@ -61,9 +63,12 @@ export const projects: readonly ProjectCase[] = [
     title: "Gestão integrada de operação",
     shortTitle: "Gestão integrada",
     headline: "Uma visão organizada da empresa para decidir os próximos passos.",
-    ownership: "Sistema desenvolvido pela KO Systems e de propriedade da Lavandine.",
-    result:
-      "A Lavandine passou a enxergar a empresa de forma mais organizada: sabe o que tem em estoque, para quem vende e onde pode melhorar. Essa visão ajuda a planejar a produção e os próximos passos do negócio.",
+    testimonial: {
+      quote:
+        "Hoje consigo enxergar minha empresa de forma mais organizada. Sei o que tenho em estoque, para quem vendo e onde posso melhorar. Isso me ajuda a planejar a produção e os próximos passos do negócio.",
+      name: "Thais Ignácio",
+      role: "Proprietária",
+    },
     summary:
       "Organizamos estoque, produção, vendas e financeiro em um só sistema. A loja consegue entender sua operação, aproveitar os materiais disponíveis e acompanhar os clientes com informações reunidas para decidir com mais clareza.",
     problem:
@@ -81,17 +86,19 @@ export const projects: readonly ProjectCase[] = [
     previewLogo: "/brand/order-workbench.png",
     title: "Pedidos prontos para conferir e imprimir",
     shortTitle: "Organização de pedidos",
-    headline: "Cerca de 85 minutos por dia a menos redigitando pedidos.",
-    ownership:
-      "Plataforma criada e de propriedade da KO Systems, utilizada por diferentes clientes.",
-    result:
-      "Um cliente relata que organizar dez pedidos levava cerca de 100 minutos por dia. Com o OrderWorkbench, passou a fazer esse trabalho em aproximadamente 15 minutos, com mais tempo disponível para o restante da operação.",
+    headline: "Cerca de 75 minutos por dia a menos redigitando pedidos.",
+    testimonial: {
+      quote:
+        "Eu levava cerca de uma hora e meia por dia redigitando pedidos. Com o OrderWorkbench, passei a fazer esse trabalho em aproximadamente 15 minutos, com mais tempo disponível para o restante da operação.",
+      name: "Rogério Oliveira",
+      role: "Cliente",
+    },
     summary:
       "Criamos o OrderWorkbench para transformar pedidos recebidos em texto ou PDF em uma tabela editável, pronta para conferir e imprimir, sem redigitar cada item no Excel.",
     problem:
-      "Um dos clientes da plataforma gastava, em média, 10 minutos para passar cada pedido de texto ou PDF para o Excel. Com cerca de 10 pedidos por dia, eram aproximadamente 100 minutos dedicados a organizar e imprimir os pedidos para a preparação.",
+      "Um dos clientes da plataforma dedicava cerca de uma hora e meia por dia a redigitar os pedidos recebidos em texto ou PDF no Excel, antes de imprimir para a preparação.",
     solution:
-      "O OrderWorkbench organiza produtos e quantidades em uma tabela editável e permite imprimir após a conferência. Um cliente relata fazer dez pedidos em aproximadamente 15 minutos no total, em vez dos 100 minutos anteriores. O tempo varia conforme o tamanho e o formato dos pedidos.",
+      "O OrderWorkbench organiza produtos e quantidades em uma tabela editável e permite imprimir após a conferência. Um cliente relata concluir esse trabalho em aproximadamente 15 minutos, em vez de uma hora e meia. O tempo varia conforme o tamanho e o formato dos pedidos.",
     capabilities: ["Leitura de documentos", "Tabela organizada", "Conferência de itens"],
     demoKind: "document",
   },
@@ -133,13 +140,13 @@ export const services: readonly ServiceOffering[] = [
 export const processSteps: readonly ProcessStep[] = [
   {
     number: "01",
-    title: "Definir o que precisa mudar",
+    title: "Definir o que vai mudar",
     description:
       "Você mostra como trabalha hoje. Identificamos a tarefa que consome tempo e combinamos o que o sistema precisa entregar.",
   },
   {
     number: "02",
-    title: "Conferir as telas antes de construir",
+    title: "Conferir antes de construir",
     description:
       "Organizamos as telas e as regras para você avaliar o caminho de uso antes do desenvolvimento.",
   },
@@ -151,7 +158,7 @@ export const processSteps: readonly ProcessStep[] = [
   },
   {
     number: "04",
-    title: "Colocar em uso e combinar o suporte",
+    title: "Colocar em uso",
     description:
       "Publicamos o sistema e combinamos manutenção e futuras melhorias de acordo com o projeto, sem deixar essas condições para depois.",
   },
