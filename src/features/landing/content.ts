@@ -43,7 +43,7 @@ export const projects: readonly ProjectCase[] = [
       quote:
         "Passei a economizar cerca de 30 minutos por dia com o PDV. Com poucos cliques, consulto o fechamento de caixa.\nTambém ficou mais fácil acompanhar as vendas, comparar os resultados e organizar o financeiro.",
       name: "Edina Alves",
-      role: "Proprietária",
+      role: "Proprietária do Estalagem Restaurante",
     },
     summary:
       "Reunimos balança, comandas e pagamentos em um PDV que também organiza o financeiro. O restaurante acompanha quanto vende e identifica os períodos de melhor resultado, sem juntar anotações em papel.",
@@ -67,7 +67,7 @@ export const projects: readonly ProjectCase[] = [
       quote:
         "Hoje consigo enxergar minha empresa de forma mais organizada. Sei o que tenho em estoque, para quem vendo e onde posso melhorar. Isso me ajuda a planejar a produção e os próximos passos do negócio.",
       name: "Thais Ignácio",
-      role: "Proprietária",
+      role: "Proprietária da Lavandine Aromas",
     },
     summary:
       "Organizamos estoque, produção, vendas e financeiro em um só sistema. A loja consegue entender sua operação, aproveitar os materiais disponíveis e acompanhar os clientes com informações reunidas para decidir com mais clareza.",
@@ -81,7 +81,7 @@ export const projects: readonly ProjectCase[] = [
   {
     slug: "orderworkbench",
     segment: "Pedidos",
-    clientName: "OrderWorkbench",
+    clientName: "OrderWB",
     demoPath: "/demos/orderworkbench/index.html",
     previewLogo: "/brand/order-workbench.png",
     title: "Pedidos prontos para conferir e imprimir",
@@ -89,16 +89,16 @@ export const projects: readonly ProjectCase[] = [
     headline: "Cerca de 75 minutos por dia a menos redigitando pedidos.",
     testimonial: {
       quote:
-        "Eu levava cerca de 1h30min por dia redigitando pedidos. Com o OrderWorkbench, passei a fazer esse trabalho em aproximadamente 15 minutos, com mais tempo disponível para o restante da operação.",
+        "Eu levava cerca de 1h30min por dia redigitando pedidos. Com o OrderWB, passei a fazer esse trabalho em aproximadamente 15 minutos, com mais tempo disponível para o restante da operação.",
       name: "Rogério Oliveira",
-      role: "Cliente",
+      role: "Cliente da OrderWB",
     },
     summary:
-      "O OrderWorkbench é um produto da KO Systems, feito para transformar pedidos recebidos em texto ou PDF em uma tabela editável, pronta para conferir e imprimir, sem redigitar cada item no Excel.",
+      "O OrderWB é um produto da KO Systems, feito para transformar pedidos recebidos em texto ou PDF em uma tabela editável, pronta para conferir e imprimir, sem redigitar cada item no Excel.",
     problem:
       "Um dos clientes da plataforma dedicava cerca de uma hora e meia por dia a redigitar os pedidos recebidos em texto ou PDF no Excel, antes de imprimir para a preparação.",
     solution:
-      "O OrderWorkbench organiza produtos e quantidades em uma tabela editável e permite imprimir após a conferência. Um cliente relata concluir esse trabalho em aproximadamente 15 minutos, em vez de uma hora e meia. O tempo varia conforme o tamanho e o formato dos pedidos.",
+      "O OrderWB organiza produtos e quantidades em uma tabela editável e permite imprimir após a conferência. Um cliente relata concluir esse trabalho em aproximadamente 15 minutos, em vez de uma hora e meia. O tempo varia conforme o tamanho e o formato dos pedidos.",
     capabilities: ["Leitura de documentos", "Tabela organizada", "Conferência de itens"],
     demoKind: "document",
   },

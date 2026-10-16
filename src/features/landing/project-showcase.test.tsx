@@ -51,9 +51,9 @@ describe("ProjectShowcase", () => {
     ).not.toBe(originalFrame);
     fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /orderworkbench/i }));
-    expect(screen.getByRole("dialog", { name: "OrderWorkbench" })).toBeVisible();
-    expect(screen.getByTitle("Demonstração de OrderWorkbench")).toHaveAttribute(
+    fireEvent.click(screen.getByRole("button", { name: /orderwb/i }));
+    expect(screen.getByRole("dialog", { name: "OrderWB" })).toBeVisible();
+    expect(screen.getByTitle("Demonstração de OrderWB")).toHaveAttribute(
       "src",
       "/demos/orderworkbench/index.html",
     );

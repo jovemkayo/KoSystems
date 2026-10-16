@@ -20,7 +20,7 @@ describe("LandingPage", () => {
   it("reúne a jornada comercial completa sem canais inativos", () => {
     render(<LandingPage />);
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
-    for (const name of ["PDV restaurante", "Gestão integrada", "OrderWorkbench"]) {
+    for (const name of ["PDV restaurante", "Gestão integrada", "OrderWB"]) {
       expect(screen.getByRole("button", { name: new RegExp(name, "i") })).toBeVisible();
     }
     expect(

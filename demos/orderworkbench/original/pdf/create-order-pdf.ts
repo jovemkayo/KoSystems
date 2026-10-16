@@ -11,7 +11,7 @@ export function createOrderPdf(order: Order, printedAt = new Date(), companyName
   const pageWidth=doc.internal.pageSize.getWidth(),pageHeight=doc.internal.pageSize.getHeight();
   const customer = upper(order.customer.trim() || "Cliente não informado");
   const items = [...order.items].sort((a, b) => a.product.localeCompare(b.product, "pt-BR"));
-  doc.setProperties({ title: `Pedido - ${customer}`, author: "Order Workbench" });
+  doc.setProperties({ title: `Pedido - ${customer}`, author: "OrderWB" });
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   const companyLines = companyName.trim()?doc.splitTextToSize(upper(companyName.trim()),pageWidth-70) as string[]:[];
@@ -44,7 +44,7 @@ export function createOrderPdf(order: Order, printedAt = new Date(), companyName
     didDrawPage: () => {
       doc.setFontSize(8);
       doc.setTextColor(100);
-      doc.text("Order Workbench", pageWidth/2, pageHeight-8, {align: "center"});
+      doc.text("OrderWB", pageWidth/2, pageHeight-8, {align: "center"});
     },
   });
   return doc;

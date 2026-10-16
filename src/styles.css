@@ -609,15 +609,17 @@ a { color: inherit; }
 .back-to-top svg { width: 16px; height: 16px; }
 .back-to-top, .back-to-top:hover, .back-to-top:active, .back-to-top:focus { text-decoration: none; }
 .back-to-top:focus-visible { outline: 2px solid var(--ko-navy); outline-offset: 4px; }
-.footer-main { max-width: 360px; grid-template-columns: auto auto; justify-content: center; gap: 16px; }
-.footer-main .footer-social { grid-column: auto; }
+.footer-main { max-width: 1232px; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); justify-content: stretch; gap: 16px; }
+/* Compensate the PNG's transparent left margin so the visible mark aligns with the copyright. */
+.footer-main .footer-logo { grid-column: 1; justify-self: start; transform: translateX(-28.1%); }
+.footer-main .footer-social { grid-column: 2; justify-self: center; }
 .footer-bottom { max-width: 1232px; margin-inline: auto; justify-content: space-between; align-items: center; text-align: left; font-family: var(--font-sans); font-variant-numeric: lining-nums tabular-nums; }
 .footer-bottom > span { font: inherit; font-variant-numeric: inherit; }
 .footer-cnpj { white-space: nowrap; }
 @media (max-width: 620px) {
-  .footer-main { grid-template-columns: auto auto; justify-items: start; align-items: center; gap: 8px; }
-  .footer-main .footer-logo { width: 76px; height: 64px; }
-  .footer-main .footer-social { gap: 4px; justify-self: end; }
+  .footer-main { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); justify-items: start; align-items: center; gap: 8px; }
+  .footer-main .footer-logo { width: min(76px, 100%); height: 64px; }
+  .footer-main .footer-social { gap: 4px; justify-self: center; }
   .footer-bottom { flex-direction: row; gap: 8px; font-size: 10px; }
 }
 
@@ -625,6 +627,8 @@ a { color: inherit; }
 .contact-copy > a::before, .hero-reveal-bottom > a::before { content: ""; grid-column: 1; grid-row: 1; }
 .contact-copy > a > span, .hero-reveal-bottom > a > span { grid-column: 2; grid-row: 1; }
 .contact-copy > a svg, .hero-reveal-bottom > a svg { position: static; transform: none; grid-column: 3; grid-row: 1; justify-self: center; }
+.hero-reveal-bottom > a { display: inline-flex; align-items: center; justify-content: center; }
+.hero-reveal-bottom > a::before { content: none; }
 @media (min-width: 1100px) {
   .process-grid h3 { font-size: clamp(18px, 1.5vw, 24px); letter-spacing: -.025em; }
 }

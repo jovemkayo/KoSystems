@@ -12,7 +12,7 @@ describe("conteúdo público", () => {
     expect(projects.map((project) => project.clientName)).toEqual([
       "Estalagem Restaurante",
       "Lavandine",
-      "OrderWorkbench",
+      "OrderWB",
     ]);
     expect(projects.every((project) => project.demoPath.startsWith("/demos/"))).toBe(true);
   });

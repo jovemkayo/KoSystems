@@ -57,7 +57,7 @@ export function PrintSheet({
           ))}
         </tbody>
       </table>
-      <footer className="print-footer">Order Workbench</footer>
+      <footer className="print-footer">OrderWB</footer>
     </section>
   );
 }
