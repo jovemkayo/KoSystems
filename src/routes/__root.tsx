@@ -10,6 +10,8 @@ import {
 import type { ReactNode } from "react";
 
 import appCss from "../styles.css?url";
+import manropeFont from "@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2?url";
+import soraFont from "@fontsource-variable/sora/files/sora-latin-wght-normal.woff2?url";
 
 function NotFoundComponent() {
   return (
@@ -95,11 +97,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Sora:wght@500;600;700&display=swap",
+        rel: "preload",
+        href: soraFont,
+        as: "font",
+        type: "font/woff2",
+        crossOrigin: "anonymous",
+      },
+      {
+        rel: "preload",
+        href: manropeFont,
+        as: "font",
+        type: "font/woff2",
+        crossOrigin: "anonymous",
       },
       { rel: "icon", href: "/favicon.png?v=3", type: "image/png", sizes: "512x512" },
       { rel: "apple-touch-icon", href: "/favicon.png?v=3", sizes: "512x512" },

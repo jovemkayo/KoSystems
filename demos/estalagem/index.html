@@ -11,15 +11,17 @@
     <link rel="icon" type="image/png" sizes="192x192" href="./assets/img/icon-192.png" />
     <link rel="apple-touch-icon" href="./assets/img/icon-192.png" />
     <link rel="stylesheet" href="./assets/css/main.css" />
+    <link rel="stylesheet" href="./assets/css/ui.css" />
   </head>
   <body>
     <section class="auth-screen" id="authScreen">
       <div class="auth-card">
         <img src="./assets/img/logo-estalagem.png" alt="Estalagem Restaurante" />
-        <h1>PDV Estalagem Restaurante</h1>
+        <h1>Estalagem Restaurante</h1>
+        <p class="login-intro">Entre na sua conta para começar.</p>
         <div class="remote-login" id="remoteLogin">
-          <input id="loginEmail" type="email" autocomplete="username" placeholder="E-mail" />
-          <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Senha" />
+          <input id="loginEmail" aria-label="E-mail" type="email" autocomplete="username" placeholder="E-mail" />
+          <input id="loginPassword" aria-label="Senha" type="password" autocomplete="current-password" placeholder="Senha" />
         </div>
         <button class="primary" id="loginBtn">Entrar</button>
         <div class="auth-error" id="authError"></div>
@@ -31,20 +33,25 @@
         <div class="brand-card">
           <img src="./assets/img/logo-estalagem.png" alt="Estalagem Restaurante" />
         </div>
-        <div class="app-title">PDV Estalagem Restaurante</div>
+      <nav class="tabs" aria-label="Navegação principal">
+        <button class="tab active" data-view="balanca"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v17M5 20h14M4 7h16M7 7l-4 7h8L7 7Zm10 0-4 7h8l-4-7Z"/></svg>Balança</button>
+        <button class="tab" data-view="caixa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 5V3h8v2M4 10h16M8 15h3m5 0h.01"/></svg>Caixa</button>
+        <button class="tab" data-view="relatorios"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3v18h17M8 16v-5m5 5V7m5 9v-8"/></svg>Relatórios</button>
+        <button class="tab" data-view="config"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 17h16"/><rect x="7" y="4" width="4" height="6" rx="1"/><rect x="14" y="14" width="4" height="6" rx="1"/></svg>Configurações</button>
+      </nav>
         <div class="session-area">
           <div class="today-pill" id="todayLabel"></div>
-          <div class="user-pill" id="currentUserLabel"></div>
+          <div class="user-pill" id="currentUserLabel" hidden></div>
           <button class="logout-btn" id="logoutBtn">Sair</button>
         </div>
       </header>
 
-      <nav class="tabs" aria-label="Navegação principal">
-        <button class="tab active" data-view="balanca">Balança</button>
-        <button class="tab" data-view="caixa">Caixa</button>
-        <button class="tab" data-view="relatorios">Relatórios</button>
-        <button class="tab" data-view="config">Configurações</button>
-      </nav>
+      <div class="sync-bar" id="syncBar" aria-live="polite" hidden>
+        <span id="syncStatus" role="status"></span>
+        <button class="ghost small-action" id="retrySyncBtn" type="button" hidden>Tentar enviar agora</button>
+      </div>
+
+
 
       <main>
         <section class="view active" id="view-balanca">
@@ -68,7 +75,7 @@
               <div class="panel-title-row">
                 <div>
                   <p class="eyebrow">Fechamento</p>
-                  <h2>Selecione uma ou mais comandas</h2>
+                  <h2>Comandas em aberto</h2>
                 </div>
                 <button class="ghost" id="clearSelectionBtn">Limpar</button>
               </div>
@@ -92,25 +99,29 @@
 
               <div class="discount-row" id="discountRow"></div>
               <div class="manual-discount-box">
-                <input id="manualDiscountAmount" inputmode="numeric" placeholder="Desconto em R$ / crédito do cliente" />
+                <input id="manualDiscountAmount" aria-label="Valor do desconto" inputmode="numeric" placeholder="Desconto em R$ / crédito do cliente" />
                 <button class="secondary" id="applyManualDiscountBtn" type="button">Aplicar desconto</button>
                 <button class="ghost" id="clearManualDiscountBtn" type="button">Limpar desconto</button>
               </div>
               <div class="discount-status" id="discountStatus">Nenhum desconto aplicado.</div>
 
               <div class="payment-fast">
-                <select id="paymentMethod">
+                <select id="paymentMethod" aria-label="Forma de pagamento">
                   <option value="Dinheiro">Dinheiro</option>
                   <option value="Débito">Débito</option>
                   <option value="Crédito">Crédito</option>
                   <option value="Pix">Pix</option>
                   <option value="Voucher refeição">Voucher refeição</option>
-                  <option value="Voucher benefícios">Voucher benefícios</option>
+
                 </select>
-                <input id="paymentAmount" inputmode="numeric" placeholder="Restante automático" />
+                <input id="paymentAmount" aria-label="Valor do pagamento" inputmode="numeric" placeholder="Restante automático" />
                 <button class="secondary" id="addPaymentBtn">Adicionar divisão</button>
               </div>
 
+              <div class="fiado-select" id="fiadoSelectBox">
+                <select id="checkoutClient"></select>
+                <button class="ghost" id="newClientFromCheckoutBtn">Novo cliente</button>
+              </div>
 
               <div class="payment-list" id="paymentList"></div>
               <div class="change-box" id="changeBox">
@@ -131,29 +142,98 @@
           </div>
         </section>
 
+        <section class="demo-unavailable" id="view-fiado" hidden inert aria-hidden="true">
+          <div class="debt-toolbar">
+            <button class="secondary" id="newClientBtn">Novo cliente</button>
+          </div>
+          <div class="work-grid debt-grid">
+            <section class="panel">
+              <details class="collapsible-box" open>
+                <summary class="panel-title-row collapsible-title">
+                <div>
+                  <p class="eyebrow">Clientes</p>
+                  <h2>Controle de fiado</h2>
+                </div>
+                </summary>
+                <div class="client-form collapsed" id="clientForm">
+                  <input id="clientName" placeholder="Nome do cliente" />
+                  <input id="clientPhone" placeholder="Telefone com DDD" />
+                  <input id="clientNote" placeholder="Identificação" />
+                  <button class="primary" id="saveClientBtn">Salvar cliente</button>
+                </div>
+                <div class="debt-search">
+                  <input id="clientSearch" aria-label="Buscar cliente" placeholder="Buscar cliente por nome ou telefone" />
+                </div>
+                <div class="client-list" id="clientList"></div>
+              </details>
+            </section>
+
+            <div class="modal hidden" id="clientDetailModal" role="dialog" aria-modal="true" aria-labelledby="selectedClientTitle">
+            <section class="modal-card debt-client-modal-card">
+              <div class="panel-title-row">
+                <div>
+                  <h2 id="selectedClientTitle">Selecione um cliente</h2>
+                </div>
+                <button class="secondary small-action" id="editClientBtn">Editar</button>
+                <button class="secondary small-action" id="restoreClientBtn" type="button" hidden>Restaurar cliente</button>
+                <button class="secondary small-action" id="openDebtDetailBtn">Detalhamento</button>
+                <button class="warn small-action" id="archiveClientBtn" type="button">Excluir cliente</button>
+                <button class="whatsapp-icon" id="whatsappBtn" title="Chamar no WhatsApp">
+                  <img src="./assets/img/whatsapp.avif" alt="WhatsApp" />
+                </button>
+                <button class="modal-close-x" id="closeClientDetailBtn" type="button" aria-label="Fechar">×</button>
+              </div>
+
+              <div class="client-balance" id="clientBalance">Saldo: R$ 0,00</div>
+              <div class="debt-actions">
+                <div class="debt-action-box">
+                  <select id="debtPaymentMethod" aria-label="Forma de recebimento do fiado">
+                    <option value="Dinheiro">Dinheiro</option>
+                    <option value="Pix">Pix</option>
+                    <option value="Débito">Débito</option>
+                    <option value="Crédito">Crédito</option>
+                    <option value="Voucher refeição">Voucher refeição</option>
+                  </select>
+                  <input id="debtPaymentAmount" aria-label="Valor recebido do fiado" inputmode="numeric" placeholder="Valor recebido" />
+                  <button class="primary" id="payDebtBtn">Receber pagamento</button>
+                </div>
+                <div class="pix-box" id="debtPixBox">
+                  <div>
+                    <span>Pix do fiado</span>
+                    <strong id="debtPixAmountLabel">R$ 0,00</strong>
+                  </div>
+                  <img id="debtPixQrImage" alt="QR Code Pix" />
+                  <textarea id="debtPixCopyCode" rows="3" readonly></textarea>
+                  <button class="secondary" id="copyDebtPixBtn" type="button">Copiar código Pix</button>
+                  <p id="debtPixHint">Selecione Pix para gerar o QR Code.</p>
+                </div>
+              </div>
+              <div class="debt-history" id="debtHistory"></div>
+            </section>
+            </div>
+          </div>
+        </section>
 
         <section class="view" id="view-relatorios">
           <div class="report-layout">
             <section class="panel cash-panel">
               <div>
-                <p class="eyebrow">Caixa do dia</p>
                 <h2>Caixa inicial</h2>
                 <strong class="cash-start-display" id="cashStartDisplay">R$ 0,00</strong>
               </div>
               <div class="cash-start-row">
-                <input id="cashStart" inputmode="numeric" placeholder="R$ 0,00" />
+                <input id="cashStart" aria-label="Valor inicial do caixa" inputmode="numeric" placeholder="R$ 0,00" />
                 <button class="primary" id="saveCashStartBtn">Salvar caixa</button>
               </div>
             </section>
 
             <section class="panel report-filter">
               <div>
-                <p class="eyebrow">Relatório financeiro</p>
                 <h2>Filtrar por período</h2>
               </div>
               <div class="date-row">
-                <label>Data inicial<input id="reportStart" type="date" /></label>
-                <label>Data final<input id="reportEnd" type="date" /></label>
+                <label>Data inicial<button id="reportStartPicker" type="button" class="date-trigger" aria-haspopup="dialog">Selecionar data</button><input id="reportStart" type="hidden" /></label>
+                <label>Data final<button id="reportEndPicker" type="button" class="date-trigger" aria-haspopup="dialog">Selecionar data</button><input id="reportEnd" type="hidden" /></label>
                 <button class="secondary" id="generateAccountantPdfBtn">Gerar relatório mensal</button>
                 <button class="secondary" id="generateCashSummaryBtn">Gerar resumo caixa</button>
               </div>
@@ -163,20 +243,19 @@
             <details class="panel report-collapse" open>
               <summary class="panel-title-row">
                 <div>
+                  <h2 id="reportSalesTitle">Vendas do dia</h2>
+                </div>
+              </summary>
+              <div class="sales-table" id="salesTable"></div>
+            </details>
+            <details class="panel report-collapse" open>
+              <summary class="panel-title-row">
+                <div>
                   <p class="eyebrow">Empresas</p>
                   <h2>Detalhamento de descontos</h2>
                 </div>
               </summary>
               <div id="companyReportDetail"></div>
-            </details>
-            <details class="panel report-collapse" open>
-              <summary class="panel-title-row">
-                <div>
-                  <p class="eyebrow">Movimento</p>
-                  <h2>Vendas do período</h2>
-                </div>
-              </summary>
-              <div class="sales-table" id="salesTable"></div>
             </details>
             <details class="panel report-collapse" open>
               <summary class="panel-title-row">
@@ -195,80 +274,95 @@
               <div class="panel-title-row">
                 <div>
                   <p class="eyebrow">Produtos</p>
-                  <h2>Cardápio editável amplo</h2>
+                  <h2>Cardápio e produtos</h2>
                 </div>
                 <button class="secondary" id="saveProductBtn">Salvar produto</button>
               </div>
-              <div class="form-grid">
-                <input id="productName" placeholder="Nome completo do produto" />
-                <input id="productPrice" inputmode="numeric" placeholder="Valor" />
-                <select id="productCategory">
-                  <option value="outros">Outros</option>
-                  <option value="principal">Marmitex/Feijoada</option>
+              <div class="form-grid new-product-form">
+                <input id="productName" aria-label="Nome do produto" placeholder="Nome completo do produto" />
+                <input id="productPrice" aria-label="Preço do produto" inputmode="numeric" placeholder="Valor" />
+                <select id="productCategory" aria-label="Categoria do produto">
                   <option value="bebidas">Bebidas</option>
                   <option value="doces">Doces</option>
+                  <option value="principal">Marmitex / Feijoada</option>
                 </select>
-                <input id="productImage" type="file" accept="image/*" aria-label="Imagem do produto" />
+                <label class="upload-control">Adicionar imagem<input id="productImage" type="file" accept="image/*" aria-label="Adicionar imagem do produto" /></label>
               </div>
               <div class="product-list" id="productList"></div>
             </section>
             <section class="panel">
               <div class="panel-title-row">
                 <div>
-                  <p class="eyebrow">Operação</p>
-                  <h2>Comandas</h2>
+                  <h2>Quantidade de comandas</h2>
                 </div>
               </div>
               <div class="form-grid small-form">
-<input id="commandMax" type="number" value="50" min="50" max="50" readonly />
+                <input id="commandMax" aria-label="Quantidade de comandas" type="number" min="10" max="50" />
                 <button class="primary" id="saveCommandMaxBtn">Salvar quantidade</button>
               </div>
               <div class="company-config">
                 <div class="panel-title-row soft-title">
                   <div>
-                    <p class="eyebrow">Refeição</p>
-                    <h2>À vontade</h2>
+                    <h2>Refeição à vontade</h2>
                   </div>
                   <button class="secondary" id="saveBuffetPriceBtn">Salvar valor</button>
                 </div>
                 <div class="form-grid small-form">
-                  <input id="buffetPrice" inputmode="numeric" placeholder="Valor do à vontade" />
+                  <input id="buffetPrice" aria-label="Preço do à vontade" inputmode="numeric" placeholder="Valor do à vontade" />
                 </div>
               </div>
               <div class="company-config">
                 <div class="panel-title-row soft-title">
                   <div>
-                    <p class="eyebrow">Pix</p>
-                    <h2>Chave de recebimento</h2>
+                    <h2>Chave Pix</h2>
                   </div>
                   <button class="secondary" id="savePixKeyBtn">Salvar Pix</button>
                 </div>
                 <div class="form-grid small-form">
-                  <input id="pixKey" placeholder="Chave Pix única do restaurante" />
+                  <input id="pixKey" aria-label="Chave Pix" placeholder="Chave Pix única do restaurante" />
                 </div>
               </div>
-              <div class="company-config">
-                <div class="panel-title-row soft-title">
-                  <div>
-                    <p class="eyebrow">Empresas</p>
-                    <h2>Descontos</h2>
-                  </div>
-                  <button class="secondary" id="saveCompanyBtn">Adicionar empresa</button>
-                </div>
-                <div class="form-grid company-form">
-                  <input id="companyName" placeholder="Nome da empresa" />
-                  <input id="companyDiscount" inputmode="decimal" placeholder="Desconto %" />
-                  <label class="file-label">
-                    Imagem
-                    <input id="companyLogo" type="file" accept="image/*" />
-                  </label>
-                </div>
+              <details class="company-config company-section" id="companyConfig" open>
+                <summary><h2>Empresas e descontos</h2></summary>
+                <button class="secondary" id="newCompanyBtn" type="button">Adicionar empresa</button>
                 <div class="company-list" id="companyList"></div>
-              </div>
+              </details>
             </section>
           </div>
         </section>
       </main>
+    </div>
+
+    <div class="modal hidden" id="confirmationModal" role="dialog" aria-modal="true" aria-labelledby="confirmationTitle" aria-describedby="confirmationMessage">
+      <section class="modal-card confirmation-card">
+        <button class="modal-close-x" id="closeConfirmationBtn" type="button" aria-label="Fechar">×</button>
+        <h2 id="confirmationTitle">Confirmar exclusão</h2>
+        <p id="confirmationMessage"></p>
+        <div class="modal-actions"><button class="ghost" id="cancelConfirmationBtn" type="button">Cancelar</button><button class="danger-btn" id="acceptConfirmationBtn" type="button">Excluir</button></div>
+      </section>
+    </div>
+    <div class="modal hidden" id="companyFormModal" role="dialog" aria-modal="true" aria-labelledby="companyFormTitle">
+      <section class="modal-card company-form-card">
+        <button class="modal-close-x" id="closeCompanyFormBtn" type="button" aria-label="Fechar">×</button>
+        <h2 id="companyFormTitle">Adicionar empresa</h2>
+        <div class="company-form-fields">
+          <label>Nome da empresa<input id="companyName" placeholder="Nome da empresa" /></label>
+          <label>Desconto<input id="companyDiscount" inputmode="decimal" placeholder="5%" /></label>
+          <label class="upload-control">Adicionar imagem<input id="companyLogo" type="file" accept="image/*" aria-label="Adicionar imagem da empresa" /></label>
+          <p id="companyFormError" class="form-error" role="status"></p>
+          <button class="primary" id="saveCompanyBtn" type="button">Adicionar empresa</button>
+        </div>
+      </section>
+    </div>
+    <div class="modal hidden" id="calendarModal" role="dialog" aria-modal="true" aria-labelledby="calendarTitle">
+      <section class="modal-card calendar-card">
+        <button class="modal-close-x" id="closeCalendarBtn" type="button" aria-label="Fechar">×</button>
+        <h2 id="calendarTitle">Escolher data</h2>
+        <div class="calendar-heading"><button class="ghost" id="calendarPrev" type="button" aria-label="Mês anterior">‹</button><strong id="calendarMonth" aria-live="polite"></strong><button class="ghost" id="calendarNext" type="button" aria-label="Próximo mês">›</button></div>
+        <div class="calendar-weekdays" aria-hidden="true"><span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span></div>
+        <div class="calendar-days" id="calendarDays" role="grid" aria-label="Dias do mês"></div>
+        <button class="secondary" id="calendarToday" type="button">Hoje</button>
+      </section>
     </div>
 
     <div class="modal hidden" id="removalModal" role="dialog" aria-modal="true" aria-labelledby="removalModalTitle">
@@ -298,7 +392,6 @@
       <div class="modal-card command-focus-card">
         <div class="panel-title-row">
           <div>
-            <p class="eyebrow">Comanda selecionada</p>
             <h2 id="commandFocusTitle">Comanda</h2>
           </div>
           <button class="modal-close-x" id="closeCommandFocusBtn" type="button" aria-label="Fechar">×</button>
@@ -343,10 +436,30 @@
       </div>
     </div>
 
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-    <script src="./assets/js/supabase-config.js"></script>
+    <div class="modal hidden" id="debtDetailModal" role="dialog" aria-modal="true" aria-labelledby="debtDetailModalTitle">
+      <div class="modal-card debt-detail-modal-card">
+        <button class="modal-close-x" id="closeDebtDetailBtn" type="button" aria-label="Fechar">×</button>
+        <h2 id="debtDetailModalTitle">Detalhamento do fiado</h2>
+        <p id="debtDetailClientName" class="modal-text"></p>
+        <div class="debt-detail-filters">
+          <label>
+            <span>Início</span>
+            <input id="debtDetailStart" type="date" />
+          </label>
+          <label>
+            <span>Fim</span>
+            <input id="debtDetailEnd" type="date" />
+          </label>
+        </div>
+        <div class="debt-detail-preview" id="debtDetailPreview"></div>
+        <div class="modal-actions">
+          <button class="secondary" id="downloadDebtImageBtn" type="button">Gerar imagem</button>
+          <button class="primary" id="sendDebtWhatsappBtn" type="button">WhatsApp</button>
+        </div>
+      </div>
+    </div>
+    <script src="./assets/js/domain.js"></script>
+    <script src="./assets/js/sync.js"></script>
     <script src="./assets/js/app.js"></script>
   </body>
 </html>

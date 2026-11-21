@@ -1,5 +1,7 @@
 # Demonstrações dos projetos originais
 
+A prévia do restaurante foi atualizada a partir da revisão `0865f50`, incluindo a camada visual `ui.css`, os módulos locais de domínio e sincronização e os ajustes do painel de fechamento. O adaptador continua sem configuração de backend, com armazenamento em memória, no máximo 50 comandas, empresas fictícias e sem navegação ou pagamento por fiado. O HTML legado desse módulo fica oculto e inerte apenas para manter os seletores internos da aplicação original.
+
 Os nomes e as marcas de Estalagem Restaurante e Lavandine foram autorizados pelo proprietário para a vitrine. São sistemas desenvolvidos pela KO Systems e de propriedade dos respectivos clientes. O OrderWorkbench é uma plataforma criada e de propriedade da KO Systems, utilizada por diferentes clientes. A autorização não inclui cadastros de pessoas, telefones, credenciais, documentos ou informações de operação reais.
 
 As demonstrações usam snapshots dos componentes e estilos originais, compilados como aplicações de navegador independentes. Os sistemas dos clientes permanecem privados. Não copiar arquivos de ambiente, credenciais, backups, bancos de dados, fotos de pessoas nem configurações de produção para este projeto.

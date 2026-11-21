@@ -11,6 +11,8 @@ describe("demo scope", () => {
       runScripts: "outside-only",
     });
     try {
+      dom.window.eval(source("../estalagem/assets/js/domain.js"));
+      dom.window.eval(source("../estalagem/assets/js/sync.js"));
       dom.window.eval(source("../estalagem/assets/js/app.js"));
       const doc = dom.window.document;
       expect(doc.querySelectorAll("#availableCommands button")).toHaveLength(50);
@@ -21,7 +23,8 @@ describe("demo scope", () => {
         [...doc.querySelectorAll("#paymentMethod option")].map((el) => el.value),
       ).not.toContain("Fiado");
       expect(doc.querySelector('[data-view="fiado"]')).toBeNull();
-      expect(doc.querySelector("#view-fiado")).toBeNull();
+      expect(doc.querySelector("#view-fiado").hidden).toBe(true);
+      expect(doc.querySelector("#view-fiado").hasAttribute("inert")).toBe(true);
     } finally {
       dom.window.close();
     }

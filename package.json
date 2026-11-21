@@ -21,6 +21,8 @@
     "rolldown": "1.2.1"
   },
   "dependencies": {
+    "@fontsource-variable/manrope": "^5.3.0",
+    "@fontsource-variable/sora": "^5.3.0",
     "@heroui/react": "^3.2.6",
     "@heroui/styles": "^3.2.6",
     "@hookform/resolvers": "^5.2.2",

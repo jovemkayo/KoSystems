@@ -1,4 +1,11 @@
 (function () {
+  const { itemUnitPrice, itemQuantity, itemTotal, itemDisplayName } = window.EstalagemDomain;
+  const { same: sameSyncData, merge: mergeSyncData, packBaseline, unpackBaseline } = window.EstalagemSync;
+  const productCategories = {
+    bebidas: "Bebidas",
+    doces: "Doces",
+    principal: "Marmitex / Feijoada"
+  };
   const STORAGE_KEY = "estalagem-pdv-state-v4";
   const SESSION_KEY = "estalagem-pdv-session-v1";
   const LOGIN_GUARD_KEY = "estalagem-pdv-login-guard-v1";
@@ -14,7 +21,7 @@
   const dateFmt = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "2-digit", month: "2-digit" });
   const fullDateFmt = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
   const roleViews = {
-    balanca: ["balanca", "caixa"],
+    balanca: ["balanca"],
     caixa: ["caixa"],
     admin: ["balanca", "caixa", "relatorios", "config"]
   };
@@ -48,12 +55,6 @@
     cashStartByDate: {},
     buffetPrice: 43,
     pixKey: "",
-    cieloIntegration: {
-      enabled: false,
-      mode: "remote",
-      terminalLogicalNumber: "DEMONSTRACAO",
-      supportedMethods: ["Débito", "Crédito", "Voucher refeição", "Voucher benefícios"]
-    },
     products: [
       { id: id(), name: "Refri lata", price: 6, front: true, category: "bebidas" },
       { id: id(), name: "Refri 600 ml", price: 8, front: true, category: "bebidas" },
@@ -83,6 +84,14 @@
   };
 
   let state = loadState();
+  const savedSync = state.__sync || {};
+  delete state.__sync;
+  delete state.showArchivedClients;
+  let syncBaseline = savedSync.baseline ? unpackBaseline(savedSync.baseline, state) : cloneData(stateForRemote());
+  let lastSyncAt = savedSync.lastSyncAt || null;
+  let syncError = "";
+  let syncRetryAttempt = 0;
+  let undoRemoval = null;
   let currentAccess = loadSession();
   let remoteLoaded = false;
   let remoteSaving = false;
@@ -91,23 +100,123 @@
   let remotePollTimer = null;
   let remoteChannel = null;
   let remoteRefreshNeedsClients = false;
+  let remoteRefreshNeedsSettings = false;
+  let remoteRefreshNeedsConfig = false;
   let normalizedRemoteAvailable = null;
   let localRevision = 0;
   let lastLocalChangeAt = 0;
-  let localPendingSync = false;
+  let localPendingSync = !!savedSync.pending;
   let remoteSyncTimer = null;
   let remoteRefreshTimer = null;
-  let clientsPendingSync = false;
-  let salesPendingSync = false;
+  let clientsPendingSync = !!savedSync.clientsPending;
+  let salesPendingSync = !!savedSync.salesPending;
   let lastSyncedClientsJson = "";
   let lastClientPollAt = 0;
-  const REMOTE_POLL_MS = 2500;
-  const CLIENT_POLL_MS = 8000;
+  const REMOTE_POLL_MS = 30000;
+  const CLIENT_POLL_MS = 120000;
   const LOCAL_REMOTE_PROTECTION_MS = 900;
   const openMenuCategories = new Set();
+  let confirmationResolve = null;
+  let confirmationTrigger = null;
+  let calendarTarget = null;
+  let calendarMonth = null;
+  let calendarTrigger = null;
+  let productSortBusy = false;
+  let menuDay = todayIso();
+  let menuDayTimer = null;
 
   const $ = (selector) => document.querySelector(selector);
   const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+
+  function confirmAction(message, title = "Confirmar exclusão", action = "Excluir", information = false) {
+    if (confirmationResolve) return Promise.resolve(false);
+    const modal = $("#confirmationModal");
+    confirmationTrigger = document.activeElement;
+    $("#confirmationTitle").textContent = title;
+    $("#confirmationMessage").textContent = message;
+    $("#acceptConfirmationBtn").textContent = action;
+    $("#acceptConfirmationBtn").classList.toggle("danger-btn", !information);
+    $("#acceptConfirmationBtn").classList.toggle("primary", information);
+    $("#cancelConfirmationBtn").hidden = information;
+    modal.classList.remove("hidden");
+    const result = new Promise(resolve => { confirmationResolve = resolve; });
+    (information ? $("#acceptConfirmationBtn") : $("#cancelConfirmationBtn")).focus();
+    return result;
+  }
+
+  function finishConfirmation(accepted) {
+    if (!confirmationResolve) return;
+    $("#confirmationModal").classList.add("hidden");
+    const resolve = confirmationResolve;
+    confirmationResolve = null;
+    if (confirmationTrigger?.isConnected) confirmationTrigger.focus();
+    resolve(accepted);
+  }
+
+  function bindDialogKeyboard(modal, close) {
+    modal.addEventListener("keydown", event => {
+      if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); close(); }
+      if (event.key !== "Tab") return;
+      const controls = Array.from(modal.querySelectorAll('button, input, select, textarea, [tabindex="0"]')).filter(el => !el.disabled && !el.closest('[hidden], .hidden'));
+      const first = controls[0], last = controls[controls.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    });
+  }
+
+  function closeCompanyForm() {
+    $("#companyFormModal").classList.add("hidden");
+    $("#newCompanyBtn").focus();
+  }
+
+  function closeCalendar() {
+    $("#calendarModal").classList.add("hidden");
+    calendarTrigger?.focus();
+  }
+
+  function chooseCalendarDate(value) {
+    const input = $("#" + calendarTarget);
+    input.value = value;
+    closeCalendar();
+    input.dispatchEvent(new Event("change", {bubbles: true}));
+  }
+
+  function drawCalendar(focusDate) {
+    const year = calendarMonth.getFullYear(), month = calendarMonth.getMonth();
+    $("#calendarMonth").textContent = calendarMonth.toLocaleDateString("pt-BR", {month: "long", year: "numeric"});
+    const first = new Date(year, month, 1), count = new Date(year, month + 1, 0).getDate();
+    const selected = $("#" + calendarTarget).value;
+    let markup = '<span class="calendar-spacer" aria-hidden="true"></span>'.repeat(first.getDay());
+    for (let day = 1; day <= count; day++) {
+      const value = isoFromLocalDate(new Date(year, month, day));
+      markup += `<button class="calendar-day${value === selected ? " selected" : ""}${value === todayIso() ? " today" : ""}" type="button" role="gridcell" data-date="${value}" aria-selected="${value === selected}" aria-label="${formatDate(value)}" tabindex="${value === (focusDate || selected) || (!selected && day === 1) ? 0 : -1}">${day}</button>`;
+    }
+    $("#calendarDays").innerHTML = markup;
+    $("#calendarDays").querySelectorAll("[data-date]").forEach(button => {
+      button.addEventListener("click", () => chooseCalendarDate(button.dataset.date));
+      button.addEventListener("keydown", event => {
+        const shift = {ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7}[event.key];
+        if (shift === undefined) return;
+        event.preventDefault();
+        const date = new Date(button.dataset.date + "T12:00:00");
+        date.setDate(date.getDate() + shift);
+        calendarMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+        drawCalendar(isoFromLocalDate(date));
+      });
+    });
+    const target = $("#calendarDays").querySelector('[tabindex="0"]') || $("#calendarDays").querySelector("button");
+    if (target) { target.tabIndex = 0; target.focus(); }
+  }
+
+  function openCalendar(target) {
+    calendarTarget = target;
+    calendarTrigger = document.activeElement;
+    const date = new Date(($("#" + target).value || todayIso()) + "T12:00:00");
+    calendarMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+    $("#calendarTitle").textContent = target === "reportStart" ? "Data inicial" : "Data final";
+    $("#calendarModal").classList.remove("hidden");
+    drawCalendar();
+  }
 
   function id() {
     return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
@@ -117,27 +226,8 @@
     return JSON.parse(JSON.stringify(data));
   }
 
-  function normalizeCieloIntegration(config) {
-    const current = config || {};
-    return {
-      enabled: Boolean(current.enabled),
-      mode: current.mode || "remote",
-      terminalLogicalNumber: String(current.terminalLogicalNumber || initialState.cieloIntegration.terminalLogicalNumber || "").replace(/\s+/g, ""),
-      supportedMethods: Array.isArray(current.supportedMethods) && current.supportedMethods.length
-        ? current.supportedMethods
-        : cloneData(initialState.cieloIntegration.supportedMethods)
-    };
-  }
-
-  const productCategories = {
-    principal: "Marmitex e feijoada",
-    bebidas: "Bebidas",
-    doces: "Doces",
-    outros: "Outros"
-  };
-  const paymentMethods = ["Dinheiro", "Débito", "Crédito", "Pix", "Voucher refeição", "Voucher benefícios"];
-  const salesPaymentFilters = ["Todos", "Dinheiro", "Pix", "Débito", "Crédito", "Voucher refeição", "Voucher benefícios"];
-  const cieloPaymentMethods = ["Débito", "Crédito", "Voucher refeição", "Voucher benefícios"];
+  const paymentMethods = ["Dinheiro", "Débito", "Crédito", "Pix", "Voucher refeição"];
+  const salesPaymentFilters = ["Todos", "Dinheiro", "Pix", "Débito", "Crédito", "Voucher refeição"];
 
   function normalizeText(value) {
     return String(value || "")
@@ -198,8 +288,8 @@
     return "outros";
   }
 
-  function isWednesdayOrSaturday() {
-    const day = new Date().getDay();
+  function isWednesdayOrSaturday(date = new Date()) {
+    const day = new Date(isoFromSaoPauloDate(date) + "T12:00:00Z").getUTCDay();
     return day === 3 || day === 6;
   }
 
@@ -211,56 +301,81 @@
     return normalizeText(product.name).includes("feijoada");
   }
 
-  function frontMenuProducts() {
-    return state.products.filter((product) => {
-      if (isMarmitex(product)) return true;
-      if (isFeijoada(product)) return isWednesdayOrSaturday();
-      return false;
-    });
+  function isProductAvailable(product, date = new Date()) {
+    return !!product && (!isFeijoada(product) || isWednesdayOrSaturday(date));
   }
 
-  function categoryMenuProducts(category) {
-    return state.products.filter((product) => {
-      if (frontMenuProducts().some((frontProduct) => frontProduct.id === product.id)) return false;
-      return (product.category || inferProductCategory(product.name)) === category;
-    });
+  function refreshMenuDay(date = new Date()) {
+    const day = isoFromSaoPauloDate(date);
+    if (day === menuDay) return false;
+    menuDay = day;
+    render();
+    return true;
+  }
+
+  function scheduleMenuDayRefresh() {
+    if (menuDayTimer) clearTimeout(menuDayTimer);
+    const now = Date.now(), day = isoFromSaoPauloDate(new Date(now));
+    let low = now, high = now + 26 * 60 * 60 * 1000;
+    // Find the next São Paulo day boundary independently of the device time zone.
+    while (high - low > 1) {
+      const middle = Math.floor((low + high) / 2);
+      if (isoFromSaoPauloDate(new Date(middle)) === day) low = middle;
+      else high = middle;
+    }
+    menuDayTimer = setTimeout(() => { refreshMenuDay(); scheduleMenuDayRefresh(); }, Math.max(1, high - Date.now()));
+  }
+
+  function frontMenuProducts(date = new Date()) {
+    return sortedProducts(state.products.filter((product) => {
+      if (!isProductAvailable(product, date)) return false;
+      if (isMarmitex(product)) return true;
+      if (isFeijoada(product)) return true;
+      return false;
+    }), "principal");
+  }
+
+  function categoryMenuProducts(category, date = new Date()) {
+    return sortedProducts(state.products.filter((product) => {
+      if (!isProductAvailable(product, date)) return false;
+      if (frontMenuProducts(date).some((frontProduct) => frontProduct.id === product.id)) return false;
+      return productCategory(product) === category;
+    }), category);
   }
 
   function productCategory(product) {
-    return product.category || inferProductCategory(product.name);
+    const category = product.category || inferProductCategory(product.name);
+    if (Object.hasOwn(productCategories, category)) return category;
+    const inferred = inferProductCategory(product.name);
+    return Object.hasOwn(productCategories, inferred) ? inferred : "principal";
   }
 
-  function isCandyProduct(product) {
-    return productCategory(product) === "doces";
+  function isQuantityProduct(product) {
+    return Boolean(product.id) && ["principal", "bebidas", "doces"].includes(productCategory(product));
   }
 
-  function itemUnitPrice(item) {
-    return Number(item.unitPrice || item.price || 0);
-  }
 
-  function itemQuantity(item) {
-    return Math.max(1, Number(item.quantity || 1));
-  }
 
-  function itemTotal(item) {
-    return itemUnitPrice(item) * itemQuantity(item);
-  }
 
-  function itemDisplayName(item) {
-    const quantity = itemQuantity(item);
-    return quantity > 1 ? `${quantity}x ${item.name}` : item.name;
-  }
 
   function findGroupedOrderItem(order, product) {
-    if (!order || !isCandyProduct(product)) return null;
-    return order.items.find((item) => item.productId === product.id && item.groupedQuantity);
+    if (!order || !isQuantityProduct(product)) return null;
+    return order.items.find((item) => item.productId === product.id && itemUnitPrice(item) === Number(product.price) && item.name === product.name);
   }
 
   function addProductToOrder(order, product, context) {
+    if (!isProductAvailable(product)) {
+      void confirmAction("A feijoada está disponível somente às quartas e sábados.", "Produto indisponível", "Entendi", true);
+      refreshMenuDay();
+      return;
+    }
+    order = state.orders.find(entry => entry.id === order.id);
+    if (!order || order.status !== "open") return;
     const now = new Date().toISOString();
     const existing = findGroupedOrderItem(order, product);
     if (existing) {
-      existing.quantity = itemQuantity(existing) + 1;
+      if (!recordQuantityChange(existing, 1)) return;
+      existing.groupedQuantity = true;
       existing.price = itemTotal(existing);
       existing.updatedAt = now;
     } else {
@@ -271,25 +386,44 @@
         price: Number(product.price || 0),
         unitPrice: Number(product.price || 0),
         quantity: 1,
-        groupedQuantity: isCandyProduct(product),
+        groupedQuantity: isQuantityProduct(product),
+        ...(isQuantityProduct(product) ? {quantityBase: 0, quantityChanges: {[id()]: 1}} : {}),
         updatedAt: now
       });
     }
     order.updatedAt = now;
     const quantity = existing ? itemQuantity(existing) : 1;
-    const quantityText = isCandyProduct(product) && quantity > 1 ? ` (${quantity} un.)` : "";
+    const quantityText = isQuantityProduct(product) && quantity > 1 ? ` (${quantity} un.)` : "";
     setLastAction(`${product.name}${quantityText} adicionado na comanda ${order.command}.`, context);
   }
 
+  function recordQuantityChange(item, delta) {
+    if (!item.quantityChanges) { item.quantityBase = itemQuantity(item); item.quantityChanges = {}; }
+    const confirmed = Number(item.quantityBase || 0) + Object.values(item.quantityChanges).reduce((sum, change) => sum + Number(change), 0);
+    if (confirmed !== itemQuantity(item)) {
+      alert("A quantidade foi alterada por uma versão antiga. Atualize os aparelhos e confira a comanda antes de continuar.");
+      return false;
+    }
+    item.quantityChanges[id()] = delta;
+    item.quantity = Number(item.quantityBase || 0) + Object.values(item.quantityChanges).reduce((sum, change) => sum + Number(change), 0);
+    return true;
+  }
+
+  function supportsItemQuantity(item) {
+    return item.groupedQuantity || state.products.some(product => product.id === item.productId && isQuantityProduct(product));
+  }
+
   function changeGroupedItemQuantity(order, itemId, delta, context) {
+    order = order && state.orders.find(entry => entry.id === order.id);
     const item = order && order.items.find((entry) => entry.id === itemId);
-    if (!item || !item.groupedQuantity) return;
+    if (!order || order.status !== "open" || !item || !supportsItemQuantity(item)) return;
+    item.groupedQuantity = true;
     const nextQuantity = itemQuantity(item) + delta;
     if (nextQuantity <= 0) {
       requestOrderItemRemoval(order, itemId, context);
       return;
     }
-    item.quantity = nextQuantity;
+    if (!recordQuantityChange(item, delta)) return;
     item.price = itemTotal(item);
     item.updatedAt = new Date().toISOString();
     order.updatedAt = item.updatedAt;
@@ -331,7 +465,7 @@
     const front = frontMenuProducts();
     return `
       ${front.map((product) => productButton(product, actionAttr)).join("")}
-      ${["bebidas", "doces", "outros"].map((category) => menuCategoryMarkup(category, actionAttr)).join("")}
+      ${["principal", "bebidas", "doces"].map((category) => menuCategoryMarkup(category, actionAttr)).join("")}
     `;
   }
 
@@ -402,16 +536,16 @@
   }
 
   function normalizeProducts(products) {
-    return (products && products.length ? products : initialState.products).map((product) => ({
+    return (Array.isArray(products) ? products : initialState.products).map((product) => ({
       ...product,
-      category: product.category || inferProductCategory(product.name),
+      category: productCategory(product),
       image: product.image || ""
     }));
   }
 
   function normalizeRuntimeState(data) {
-    data.commandMax = 50;
     data.products = normalizeProducts(data.products);
+    data.productSortModes = data.productSortModes && typeof data.productSortModes === "object" ? data.productSortModes : {};
     data.orders = (Array.isArray(data.orders) ? data.orders : []).map((order) => ({
       ...order,
       command: Number(order.command),
@@ -426,7 +560,7 @@
       ...client,
       entries: Array.isArray(client.entries) ? client.entries : []
     }));
-    data.companies = Array.isArray(data.companies) && data.companies.length ? data.companies : initialState.companies;
+    data.companies = Array.isArray(data.companies) ? data.companies : initialState.companies;
     data.sales = (Array.isArray(data.sales) ? data.sales : []).map((sale) => ({
       ...sale,
       payments: (Array.isArray(sale.payments) ? sale.payments : []).map((payment) => ({
@@ -448,7 +582,6 @@
     if (!Object.keys(data.cashStartByDate).length && Number(data.cashStart || 0)) {
       data.cashStartByDate[todayIso()] = Number(data.cashStart || 0);
     }
-    data.cieloIntegration = normalizeCieloIntegration(data.cieloIntegration);
     return data;
   }
 
@@ -490,12 +623,38 @@
     localPendingSync = true;
     if (options.clientsChanged || clientsJson() !== lastSyncedClientsJson) clientsPendingSync = true;
     if (options.salesChanged) salesPendingSync = true;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    saveLocalState();
     scheduleRemoteSync();
   }
 
   function saveLocalState() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, __sync: {
+        baseline: packBaseline(syncBaseline, state), pending: localPendingSync,
+        clientsPending: clientsPendingSync, salesPending: salesPendingSync, lastSyncAt
+      } }));
+    } catch (error) {
+      syncError = "Não foi possível salvar neste aparelho. Libere espaço e mantenha o aplicativo aberto.";
+      renderSyncStatus();
+      throw error;
+    }
+    renderSyncStatus();
+  }
+
+  function renderSyncStatus() {
+    const box = $("#syncStatus");
+    if (!box) return;
+    const offline = navigator.onLine === false;
+    const bar = $("#syncBar");
+    if (bar) bar.hidden = !syncError && !offline && !localPendingSync && !remoteSaving;
+    box.dataset.status = syncError || offline ? "error" : localPendingSync ? "pending" : "ok";
+    box.textContent = syncError || (offline
+      ? "Sem conexão · alterações aguardando envio"
+      : remoteSaving ? "Enviando alterações…"
+      : localPendingSync ? "Alterações aguardando envio"
+      : "");
+    const retry = $("#retrySyncBtn");
+    if (retry) retry.hidden = !localPendingSync && !syncError;
   }
 
   function stateForRemote() {
@@ -518,6 +677,10 @@
     delete copy.pendingRemoval;
     delete copy.pendingPayments;
     delete copy.showClientForm;
+    delete copy.__sync;
+    delete copy.showArchivedClients;
+    delete copy.rejectedCheckouts;
+    delete copy.rejectedOrderChanges;
     return copy;
   }
 
@@ -554,7 +717,7 @@
     data.orders = (Array.isArray(data.orders) ? data.orders : [])
       .map((order) => ({
         ...order,
-        items: (Array.isArray(order.items) ? order.items : []).filter((item) => item && !removedItemIds.has(item.id))
+        items: order.status === "closed" ? order.items : (Array.isArray(order.items) ? order.items : []).filter((item) => item && !removedItemIds.has(item.id))
       }))
       .filter((order) => order.status !== "open" || order.items.length);
     return data;
@@ -660,7 +823,6 @@
       buffetPrice: remote.buffetPrice || local.buffetPrice,
       cashStartByDate: { ...(remote.cashStartByDate || {}), ...(local.cashStartByDate || {}) },
       pixKey: typeof remote.pixKey === "string" ? remote.pixKey : local.pixKey,
-      cieloIntegration: normalizeCieloIntegration(remote.cieloIntegration || local.cieloIntegration),
       orders: mergeOrdersForSync(remote.orders, local.orders),
       clients: mergeClientsForSync(remote.clients, local.clients, cancelledClientEntryIds),
       sales: mergeById(remote.sales, local.sales).filter((sale) => sale && !cancelledSales.has(sale.id)),
@@ -674,80 +836,102 @@
     }));
   }
 
-  function mergeRemoteState(data) {
-    const protectLocal = localPendingSync || Date.now() - lastLocalChangeAt < LOCAL_REMOTE_PROTECTION_MS;
-    if (protectLocal) {
-      data = mergeOperationalState(data || {}, stateForRemote());
+
+  function adoptPaidOrder(local, remote, base) {
+    if (!local || remote?.status !== "closed" || local.status !== "cancelled") return false;
+    const latest = state.orders.find(order => order.id === local.id);
+    if (!sameSyncData(latest, local)) return false;
+    const pendingSale = state.sales.some(sale => sale.orderIds?.includes(local.id) && !baselineRecord("sales", sale.id));
+    if (pendingSale) return false;
+    const previous = cloneData(state);
+    const previousBaseline = cloneData(syncBaseline);
+    const message = `A comanda ${local.command} já foi fechada em outro aparelho. O cancelamento local não alterou o pagamento. Uma cópia foi guardada neste aparelho para conferência.`;
+    state.rejectedOrderChanges = [...(state.rejectedOrderChanges || []), {local: cloneData(local), base: cloneData(base || null), remote: cloneData(remote), at: new Date().toISOString(), message}];
+    state.orders = state.orders.map(order => order.id === remote.id ? cloneData(remote) : order);
+    if (state.selectedOrders.includes(local.id)) { state.pendingPayments = []; state.activeDiscount = null; state.manualDiscount = 0; }
+    resetCheckoutAfterOrderChange(local.id);
+    state.selectedOrders = state.selectedOrders.filter(orderId => orderId !== remote.id);
+    syncBaseline.orders = (syncBaseline.orders || []).filter(order => order.id !== remote.id).concat([cloneData(remote)]);
+    try { saveLocalState(); }
+    catch (error) { state = previous; syncBaseline = previousBaseline; throw error; }
+    alert(message);
+    return true;
+  }
+
+  function mergeReadRecords(kind, records) {
+    for (const remote of records || []) {
+      const local = (state[kind] || []).find(entry => entry.id === remote.id);
+      const base = baselineRecord(kind, remote.id);
+      if (kind === "orders" && adoptPaidOrder(local, remote, base)) continue;
+      let merged = remote;
+      if (local && !sameSyncData(local, base)) {
+        try {
+          if (kind === "orders" && isTerminalOrderStatus(remote.status) && local.status === "open") {
+            throw new Error(`Comanda ${local.command} já fechada em outro aparelho. Confira a alteração local pendente.`);
+          }
+          merged = mergeSyncData(base, local, remote);
+        } catch (error) {
+          syncError = error.message;
+          localPendingSync = true;
+          continue;
+        }
+      }
+      state[kind] = (state[kind] || []).filter(entry => entry.id !== remote.id).concat([merged]);
+      syncBaseline[kind] = (syncBaseline[kind] || []).filter(entry => entry.id !== remote.id).concat([cloneData(remote)]);
     }
-    const cancelledSaleIds = mergeIdList(state.cancelledSaleIds, data && data.cancelledSaleIds);
-    const cancelledClientEntryIds = mergeIdList(state.cancelledClientEntryIds, data && data.cancelledClientEntryIds);
-    const removedScheduleIds = mergeIdList(state.removedScheduleIds, data && data.removedScheduleIds);
-    const mergedSales = mergeById((data && data.sales) || [], state.sales || []);
-    const mergedClients = mergeClientsForSync((data && data.clients) || [], state.clients || [], cancelledClientEntryIds);
-    const mergedItemRemovals = mergeById((data && data.itemRemovals) || [], state.itemRemovals || []);
-    const mergedOrderAdjustments = mergeById((data && data.orderAdjustments) || [], state.orderAdjustments || []);
-    state = {
-      ...state,
-      ...(data || {}),
-      sales: mergedSales,
-      clients: mergedClients,
-      itemRemovals: mergedItemRemovals,
-      orderAdjustments: mergedOrderAdjustments,
-      accessUsers: state.accessUsers,
-      selectedCommand: state.selectedCommand,
-      selectedOrders: state.selectedOrders,
-      selectedClientId: state.selectedClientId,
-      selectedCheckoutClientId: state.selectedCheckoutClientId,
-      showCommandFocus: state.showCommandFocus,
-      productMoveSelected: state.productMoveSelected,
-      selectedReportCompany: state.selectedReportCompany,
-      selectedSalesPaymentFilter: state.selectedSalesPaymentFilter,
-      openDebtEntryIds: state.openDebtEntryIds,
-      activeDiscount: state.activeDiscount,
-      lastAction: state.lastAction,
-      pendingRemoval: state.pendingRemoval,
-      pendingPayments: state.pendingPayments,
-      showClientForm: state.showClientForm
-    };
-    state.cancelledSaleIds = cancelledSaleIds;
-    state.cancelledClientEntryIds = cancelledClientEntryIds;
-    state.removedScheduleIds = removedScheduleIds;
+  }
+
+  function mergeRemoteState(data) {
+    const remoteSettings = settingsData(data);
+    Object.assign(state, mergeSyncData(settingsData(syncBaseline), settingsData(state), remoteSettings));
+    Object.assign(syncBaseline, cloneData(remoteSettings));
+    if (Array.isArray(data.products)) state.products = cloneData(data.products);
+    if (Array.isArray(data.companies)) state.companies = cloneData(data.companies);
+    for (const kind of Object.keys(syncTables)) mergeReadRecords(kind, data[kind]);
+    collapseDuplicateOpenOrders();
     normalizeRuntimeState(state);
-    const removedSchedules = new Set(state.removedScheduleIds);
-    state.schedules = (state.schedules || []).filter((schedule) => schedule && !removedSchedules.has(schedule.id));
-    applyRemovedOrderItems(state);
-    state.buffetPrice = Number(state.buffetPrice || initialState.buffetPrice);
-    state.pixKey = String(state.pixKey || "");
-    state.cieloIntegration = normalizeCieloIntegration(state.cieloIntegration);
-    state.manualDiscount = Number(state.manualDiscount || 0);
     applyCancellations(state);
-    const openOrderIds = new Set(state.orders.filter((order) => order.status === "open").map((order) => order.id));
-    state.selectedOrders = state.selectedOrders.filter((orderId) => openOrderIds.has(orderId));
-    if (state.pendingRemoval && !openOrderIds.has(state.pendingRemoval.orderId)) state.pendingRemoval = null;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    applyRemovedOrderItems(state);
+    repairBuffetConversions();
+    state.selectedOrders = state.selectedOrders.filter(orderId => state.orders.some(order => order.id === orderId && order.status === "open"));
+    localPendingSync = hasPendingChanges();
+    saveLocalState();
+  }
+
+  async function reconcileMissingOrders(remoteOrders) {
+    const visibleIds = new Set((remoteOrders || []).map(order => order.id));
+    const missing = state.orders.filter(order => order.status === "open" && !visibleIds.has(order.id));
+    if (!missing.length) return;
+    const rows = await fetchRemoteOrdersByIds(missing.map(order => order.id));
+    if (rows === null) throw new Error("Não foi possível conferir as comandas pendentes.");
+    mergeReadRecords("orders", rows.map(orderFromRow));
+    const known = new Set(rows.map(row => row.id));
+    syncBaseline.orders = (syncBaseline.orders || []).filter(order => known.has(order.id) || !missing.some(item => item.id === order.id));
+    localPendingSync = hasPendingChanges();
+    saveLocalState();
   }
 
   async function loadRemoteState() {
     if (!supabaseClient || !currentAccess) return;
-    const remoteData = await fetchRemoteRestaurantData();
-    if (remoteData === null) {
-      $("#authError").textContent = "Falha ao carregar dados do restaurante.";
-      return;
-    }
-    if (remoteData && Object.keys(remoteData).length) {
+    try {
+      const remoteData = await fetchRemoteRestaurantData();
+      if (remoteData === null) throw new Error("Falha ao carregar dados do restaurante. As alterações locais foram preservadas.");
       mergeRemoteState(remoteData);
-    } else {
-      await syncRemoteState(true);
+      await reconcileMissingOrders(remoteData.orders || []);
+      remoteLoaded = true;
+      if (!localPendingSync) markClientsSynced();
+      if (localPendingSync) scheduleRemoteSync();
+      else { lastSyncAt = new Date().toISOString(); saveLocalState(); }
+    } catch (error) {
+      syncError = error.message || "Falha ao conectar ao restaurante.";
+      renderSyncStatus();
+      $("#authError").textContent = syncError;
     }
-    markClientsSynced();
-    salesPendingSync = false;
-    remoteLoaded = true;
   }
 
   async function fetchRemoteRestaurantData() {
     const normalized = await fetchNormalizedRestaurantData();
-    if (normalized) return normalized;
-    return {};
+    return normalized;
   }
 
   function isMissingTableError(error) {
@@ -761,11 +945,12 @@
 
   function normalizedMetaFromState(data) {
     return {
+      productSortModes: data.productSortModes || {},
+      productPopularity: data.productPopularity || null,
       removedOrderItemIds: data.removedOrderItemIds || [],
       removedScheduleIds: data.removedScheduleIds || [],
       cancelledSaleIds: data.cancelledSaleIds || [],
-      cancelledClientEntryIds: data.cancelledClientEntryIds || [],
-      cieloIntegration: normalizeCieloIntegration(data.cieloIntegration)
+      cancelledClientEntryIds: data.cancelledClientEntryIds || []
     };
   }
 
@@ -802,28 +987,23 @@
       createdAt: (row.payload && row.payload.createdAt) || row.created_at
     }));
     orders = orders.filter((order) => !saleAlreadyClosedOrder(sales, order));
-    const clients = (rows.clients || []).map((row) => ({
-      ...(row.payload || {}),
-      id: row.id,
-      name: row.name,
-      phone: row.phone || "",
-      note: row.note || ""
-    }));
+    const clients = (rows.clients || []).map(clientFromRow);
     return normalizeRuntimeState({
       ...stateForRemote(),
       commandMax: Number(settings.command_max || state.commandMax || initialState.commandMax),
       buffetPrice: Number(settings.buffet_price || state.buffetPrice || initialState.buffetPrice),
       cashStartByDate: settings.cash_start_by_date || state.cashStartByDate || {},
       pixKey: settings.pix_key || "",
-      cieloIntegration: normalizeCieloIntegration(meta.cieloIntegration || state.cieloIntegration),
-      products: products.length ? products : state.products,
-      companies: companies.length ? companies : state.companies,
+      products,
+      companies,
       orders,
       sales,
       clients,
       itemRemovals: (rows.itemRemovals || []).map((row) => ({ ...(row.payload || {}), id: row.id, date: normalizeDateIso(row.removal_date || (row.payload && row.payload.date)) })),
       orderAdjustments: (rows.orderAdjustments || []).map((row) => ({ ...(row.payload || {}), id: row.id, date: row.adjustment_date })),
       schedules: [],
+      productSortModes: meta.productSortModes || {},
+      productPopularity: meta.productPopularity || null,
       removedOrderItemIds: meta.removedOrderItemIds || [],
       removedScheduleIds: meta.removedScheduleIds || [],
       cancelledSaleIds: meta.cancelledSaleIds || [],
@@ -843,7 +1023,7 @@
       return null;
     }
     normalizedRemoteAvailable = true;
-    const since = daysAgoIso(120);
+    const since = todayIso();
     const [
       productsResult,
       companiesResult,
@@ -857,7 +1037,7 @@
       supabaseClient.from("pdv_companies").select("*").eq("active", true).order("name", { ascending: true }),
       supabaseClient.from("pdv_orders").select("*").eq("status", "open").order("command_number", { ascending: true }),
       supabaseClient.from("pdv_sales").select("*").eq("cancelled", false).gte("sale_date", since).order("sale_date", { ascending: false }),
-      supabaseClient.from("pdv_clients").select("*").eq("active", true).order("name", { ascending: true }),
+      supabaseClient.from("pdv_clients").select("*").order("name", { ascending: true }),
       supabaseClient.from("pdv_item_removals").select("*").gte("removal_date", since).order("created_at", { ascending: false }),
       supabaseClient.from("pdv_order_adjustments").select("*").gte("adjustment_date", since).order("created_at", { ascending: false })
     ]);
@@ -900,6 +1080,7 @@
       id: row.id,
       command: Number(row.command_number),
       status: row.status,
+      items: (row.payload?.items || []).map(item => ({ ...item, quantity: itemQuantity(item), unitPrice: itemUnitPrice(item), price: itemTotal(item) })),
       createdAt: (row.payload && row.payload.createdAt) || row.created_at,
       closedAt: row.closed_at || (row.payload && row.payload.closedAt),
       updatedAt: row.updated_at || (row.payload && row.payload.updatedAt)
@@ -921,7 +1102,8 @@
       id: row.id,
       name: row.name,
       phone: row.phone || "",
-      note: row.note || ""
+      note: row.note || "",
+      ...(row.active === false ? { archived: true } : {})
     };
   }
 
@@ -1018,8 +1200,7 @@
   async function fetchRemoteClients() {
     const { data, error } = await supabaseClient
       .from("pdv_clients")
-      .select("id, name, phone, note, payload")
-      .eq("active", true)
+      .select("id, name, phone, note, payload, active, updated_at")
       .order("name", { ascending: true });
     if (error) {
       console.warn("Falha ao buscar clientes/fiados", error);
@@ -1042,8 +1223,7 @@
           .order("sale_date", { ascending: false }),
         supabaseClient
           .from("pdv_clients")
-          .select("id, name, phone, note, payload")
-          .eq("active", true)
+          .select("id, name, phone, note, payload, active, updated_at")
           .order("name", { ascending: true }),
         supabaseClient
           .from("pdv_item_removals")
@@ -1078,9 +1258,9 @@
         console.warn("Falha ao buscar relatório por período", failed.error);
         return false;
       }
-      state.sales = mergeById(state.sales || [], (salesResult.data || []).map(saleFromRow), (_local, remote) => remote);
-      state.clients = mergeById(state.clients || [], (clientsResult.data || []).map(clientFromRow), (_local, remote) => remote);
-      state.itemRemovals = mergeById(state.itemRemovals || [], (removalsResult.data || []).map(removalFromRow), (_local, remote) => remote);
+      mergeReadRecords("sales", (salesResult.data || []).map(saleFromRow));
+      mergeReadRecords("clients", (clientsResult.data || []).map(clientFromRow));
+      mergeReadRecords("itemRemovals", (removalsResult.data || []).map(removalFromRow));
       applyCancellations(state);
       saveLocalState();
       return true;
@@ -1135,20 +1315,262 @@
     };
   }
 
-  async function persistNormalizedState(data, configOnly = false, options = {}) {
+
+  function settingsData(data) {
+    return {
+      commandMax: Number(data.commandMax || 100), buffetPrice: Number(data.buffetPrice || 43),
+      cashStartByDate: data.cashStartByDate || {}, pixKey: data.pixKey || "",
+      ...normalizedMetaFromState(data)
+    };
+  }
+
+  function settingsFromRow(row) {
+    return {
+      commandMax: row.command_max, buffetPrice: Number(row.buffet_price),
+      cashStartByDate: row.cash_start_by_date || {}, pixKey: row.pix_key || "",
+      productSortModes: row.meta?.productSortModes || {},
+      productPopularity: row.meta?.productPopularity || null,
+      removedOrderItemIds: row.meta?.removedOrderItemIds || [],
+      removedScheduleIds: row.meta?.removedScheduleIds || [],
+      cancelledSaleIds: row.meta?.cancelledSaleIds || [],
+      cancelledClientEntryIds: row.meta?.cancelledClientEntryIds || []
+    };
+  }
+
+  const syncTables = {
+    orders: "pdv_orders", sales: "pdv_sales", clients: "pdv_clients",
+    itemRemovals: "pdv_item_removals", orderAdjustments: "pdv_order_adjustments"
+  };
+
+  function recordsForSync(kind, data) {
+    const records = cloneData(data[kind] || []);
+    if (kind === "sales") {
+      for (const saleId of data.cancelledSaleIds || []) {
+        const sale = records.find(entry => entry.id === saleId) || (syncBaseline.sales || []).find(entry => entry.id === saleId);
+        if (sale && !records.some(entry => entry.id === saleId)) records.push({ ...sale, cancelled: true });
+      }
+    }
+    return records;
+  }
+
+  function baselineRecord(kind, recordId) {
+    return (syncBaseline[kind] || []).find(entry => entry.id === recordId);
+  }
+
+  function collapseDuplicateOpenOrders() {
+    const open = state.orders.filter(order => order.status === "open");
+    const collapsed = mergeOpenOrdersByCommand(open);
+    if (!collapsed.duplicateIds.length) return;
     const now = new Date().toISOString();
-    const settingsResult = await supabaseClient.from("pdv_settings").upsert({
-      id: "main",
-      command_max: Number(data.commandMax || 100),
-      buffet_price: Number(data.buffetPrice || 43),
-      cash_start_by_date: data.cashStartByDate || {},
-      pix_key: data.pixKey || "",
-      meta: normalizedMetaFromState(data),
-      updated_by: currentAccess.id,
-      updated_at: now
-    });
-    if (settingsResult.error) throw settingsResult.error;
-    normalizedRemoteAvailable = true;
+    const duplicates = new Set(collapsed.duplicateIds);
+    const selectedCommands = new Set(open.filter(order => state.selectedOrders.includes(order.id)).map(order => order.command));
+    state.orders = state.orders.filter(order => order.status !== "open").concat(
+      collapsed.orders,
+      open.filter(order => duplicates.has(order.id)).map(order => ({ ...order, status: "cancelled", closedAt: now, updatedAt: now }))
+    );
+    state.selectedOrders = collapsed.orders.filter(order => selectedCommands.has(order.command)).map(order => order.id);
+    localPendingSync = true;
+  }
+
+  function hasPendingChanges() {
+    const data = stateForRemote();
+    if (!sameSyncData(settingsData(data), settingsData(syncBaseline))) return true;
+    return Object.keys(syncTables).some(kind => recordsForSync(kind, data).some(record => !sameSyncData(record, baselineRecord(kind, record.id))));
+  }
+
+  function acknowledgeRecord(kind, sent, confirmed, originalId = sent.id) {
+    const latest = (state[kind] || []).find(entry => entry.id === originalId);
+    if (latest) {
+      const sentWithId = { ...sent, id: confirmed.id };
+      const latestWithId = { ...latest, id: confirmed.id };
+      const merged = mergeSyncData(sentWithId, latestWithId, confirmed);
+      state[kind] = state[kind].map(entry => entry.id === originalId ? merged : entry);
+    }
+    syncBaseline[kind] = (syncBaseline[kind] || []).filter(entry => entry.id !== originalId && entry.id !== confirmed.id).concat([cloneData(confirmed)]);
+    if (originalId !== confirmed.id && kind === "orders") {
+      state.selectedOrders = state.selectedOrders.map(value => value === originalId ? confirmed.id : value);
+      render();
+    }
+    saveLocalState();
+  }
+
+  function recordFromRow(kind, row) {
+    if (kind === "orders") return orderFromRow(row);
+    if (kind === "clients") return clientFromRow(row);
+    if (kind === "sales") return { ...saleFromRow(row), ...(row.cancelled ? { cancelled: true } : {}) };
+    return { ...(row.payload || {}), id: row.id };
+  }
+
+  function recordToRow(kind, record, now) {
+    if (kind === "orders") return { ...orderRow(record), updated_at: now };
+    if (kind === "clients") return { id: record.id, name: record.name, phone: record.phone || "", note: record.note || "", payload: record, active: !record.archived, updated_by: currentAccess.id, updated_at: now };
+    if (kind === "sales") return { id: record.id, sale_date: normalizeDateIso(record.date || record.createdAt), payload: record, cancelled: !!record.cancelled, created_at: record.createdAt || now, updated_by: currentAccess.id, updated_at: now };
+    const dateColumn = kind === "itemRemovals" ? "removal_date" : "adjustment_date";
+    return { id: record.id, [dateColumn]: record.date || todayIso(), payload: record, created_at: record.createdAt || now, updated_by: currentAccess.id };
+  }
+
+  function checkoutConflict(saleId) {
+    const error = new Error("A comanda foi alterada em outro aparelho. O pagamento não foi confirmado; confira os itens e feche novamente.");
+    error.checkoutSaleId = saleId;
+    return error;
+  }
+
+  function validateCheckoutOrder(sent, remote, base) {
+    if (sent.status !== "closed" || !sent.closedBySaleId || !remote) return;
+    if (isTerminalOrderStatus(remote.status) && remote.closedBySaleId !== sent.closedBySaleId) throw checkoutConflict(sent.closedBySaleId);
+    try {
+      const items = mergeSyncData(base?.items, sent.items, remote.items);
+      if (!sameSyncData(items, sent.items)) throw checkoutConflict(sent.closedBySaleId);
+    } catch (_error) { throw checkoutConflict(sent.closedBySaleId); }
+  }
+
+  async function rejectPendingCheckout(saleId, message) {
+    const sale = state.sales.find(entry => entry.id === saleId);
+    if (!sale) throw new Error(message);
+    const existing = await supabaseClient.from("pdv_sales").select("id").eq("id", saleId).maybeSingle();
+    if (existing.error) throw existing.error;
+    if (existing.data) throw new Error("O pagamento já foi registrado, mas a comanda mudou. Confira o histórico antes de continuar.");
+    const restores = [];
+    for (const orderId of sale.orderIds || []) {
+      const local = state.orders.find(order => order.id === orderId);
+      if (!local) continue;
+      let found = await supabaseClient.from("pdv_orders").select("*").eq("id", orderId).maybeSingle();
+      if (found.error) throw found.error;
+      if (!found.data) {
+        found = await supabaseClient.from("pdv_orders").select("*").eq("command_number", local.command).eq("status", "open").maybeSingle();
+        if (found.error) throw found.error;
+      }
+      let remote = found.data ? orderFromRow(found.data) : null;
+      if (remote?.status === "closed" && remote.closedBySaleId === saleId) {
+        const reopened = { ...remote, status: "open" };
+        delete reopened.closedAt; delete reopened.closedBySaleId;
+        const now = new Date(Math.max(Date.now(), Date.parse(found.data.updated_at) + 1)).toISOString();
+        const row = recordToRow("orders", reopened, now);
+        const result = await supabaseClient.from("pdv_orders").update(row).eq("id", remote.id).eq("updated_at", found.data.updated_at).select("id");
+        if (result.error) throw result.error;
+        if (!result.data?.length) throw new Error("A comanda mudou durante a recuperação. Os dados continuam pendentes neste aparelho.");
+        remote = orderFromRow(row);
+      }
+      let restored = remote ? cloneData(remote) : { ...local, status: "open" };
+      if (restored.status === "open") {
+        try { restored.items = mergeSyncData(baselineRecord("orders", orderId)?.items, local.items, restored.items || []); }
+        catch (_error) { restored.items = mergeById(restored.items || [], local.items || [], (online) => online); }
+        delete restored.closedAt; delete restored.closedBySaleId;
+      }
+      restores.push({ originalId: orderId, restored, remote });
+    }
+    state.rejectedCheckouts = [...(state.rejectedCheckouts || []), { sale: cloneData(sale), message, at: new Date().toISOString() }].slice(-20);
+    state.sales = state.sales.filter(entry => entry.id !== saleId);
+    state.clients.forEach(client => { client.entries = client.entries.filter(entry => entry.saleId !== saleId); });
+    for (const { originalId, restored, remote } of restores) {
+      state.orders = state.orders.filter(order => order.id !== originalId && order.id !== restored.id).concat([restored]);
+      syncBaseline.orders = (syncBaseline.orders || []).filter(order => order.id !== originalId && order.id !== restored.id);
+      if (remote) syncBaseline.orders.push(cloneData(remote));
+    }
+    state.selectedOrders = restores.filter(entry => entry.restored.status === "open").map(entry => entry.restored.id);
+    setLastAction(message, "caixa");
+    logAudit("checkout_rejected", { saleId, reason: message });
+    localPendingSync = hasPendingChanges();
+    saveLocalState();
+    notifyRemoteStateChanged({ clients: true });
+    render();
+    alert(message);
+  }
+
+  async function validatePendingCheckouts(data) {
+    for (const sale of data.sales || []) {
+      if (!sale.orderIds || baselineRecord("sales", sale.id)) continue;
+      const rows = await fetchRemoteOrdersByIds(sale.orderIds);
+      if (rows === null) throw new Error("Não foi possível conferir o pagamento. Ele continua pendente neste aparelho.");
+      for (const orderId of sale.orderIds) {
+        const sent = data.orders.find(order => order.id === orderId);
+        if (!sent) throw checkoutConflict(sale.id);
+        const row = rows.find(order => order.id === orderId);
+        if (!row) {
+          const open = await supabaseClient.from("pdv_orders").select("id").eq("command_number", sent.command).eq("status", "open").maybeSingle();
+          if (open.error) throw open.error;
+          if (open.data) throw checkoutConflict(sale.id);
+        }
+        validateCheckoutOrder(sent, row && orderFromRow(row), baselineRecord("orders", orderId));
+      }
+    }
+  }
+
+  async function persistRecord(kind, sent) {
+    const table = syncTables[kind];
+    const base = baselineRecord(kind, sent.id);
+    const found = await supabaseClient.from(table).select("*").eq("id", sent.id).maybeSingle();
+    if (found.error) throw found.error;
+    let row = found.data;
+    let canonicalSent = sent;
+    let canonicalBase = base;
+    if (!row && kind === "orders" && sent.status === "open") {
+      const open = await supabaseClient.from(table).select("*").eq("command_number", sent.command).eq("status", "open").maybeSingle();
+      if (open.error) throw open.error;
+      row = open.data;
+      if (row) {
+        const existing = orderFromRow(row);
+        canonicalBase = { ...existing, items: [] };
+        canonicalSent = { ...existing, items: sent.items, updatedAt: sent.updatedAt };
+      }
+    }
+    const remote = row ? recordFromRow(kind, row) : undefined;
+    if (kind === "orders" && adoptPaidOrder(sent, remote, base)) return;
+    if (kind === "orders") validateCheckoutOrder(sent, remote, base);
+    if (kind === "orders" && remote && sent.status === "open" && (remote.status === "closed" || (remote.status === "cancelled" && base?.status !== "cancelled"))) {
+      throw new Error(`Comanda ${sent.command} já foi fechada em outro aparelho. Há uma alteração local pendente; confira antes de continuar.`);
+    }
+    // A missing remote row may be a genuinely new row, or a legacy local copy.
+    const merged = remote ? mergeSyncData(canonicalBase, canonicalSent, remote) : canonicalSent;
+    if (kind === "clients" && merged.archived && Math.abs(clientBalance(merged)) >= 0.005) {
+      merged.archived = false;
+      setLastAction("A exclusão do cliente foi cancelada porque ele possui saldo. O histórico foi preservado.", "fiado");
+    }
+    if (remote && sameSyncData(merged, remote)) {
+      acknowledgeRecord(kind, sent, remote);
+      return;
+    }
+    const now = new Date(Math.max(Date.now(), Date.parse(row?.updated_at || "") + 1 || 0)).toISOString();
+    const next = recordToRow(kind, merged, now);
+    let result;
+    if (row) {
+      let write = supabaseClient.from(table).update(next).eq("id", row.id);
+      write = row.updated_at ? write.eq("updated_at", row.updated_at) : write.eq("payload", JSON.stringify(row.payload || {}));
+      result = await write.select("id");
+      if (!result.error && !result.data?.length) throw new Error("Este registro mudou durante o envio. Tentando novamente sem sobrescrever alterações.");
+    } else {
+      result = await supabaseClient.from(table).insert(next);
+    }
+    if (result.error) throw result.error;
+    acknowledgeRecord(kind, sent, recordFromRow(kind, next));
+  }
+
+  async function persistSettings(data) {
+    const sent = settingsData(data), base = settingsData(syncBaseline);
+    if (sameSyncData(sent, base)) return;
+    const found = await supabaseClient.from("pdv_settings").select("*").eq("id", "main").maybeSingle();
+    if (found.error) throw found.error;
+    const merged = found.data ? mergeSyncData(base, sent, settingsFromRow(found.data)) : sent;
+    const row = {
+      id: "main", command_max: merged.commandMax, buffet_price: merged.buffetPrice,
+      cash_start_by_date: merged.cashStartByDate, pix_key: merged.pixKey,
+      meta: normalizedMetaFromState(merged), updated_by: currentAccess.id,
+      updated_at: new Date(Math.max(Date.now(), Date.parse(found.data?.updated_at || "") + 1 || 0)).toISOString()
+    };
+    const result = found.data
+      ? await supabaseClient.from("pdv_settings").update(row).eq("id", "main").eq("updated_at", found.data.updated_at).select("id")
+      : await supabaseClient.from("pdv_settings").insert(row).select("id");
+    if (result.error) throw result.error;
+    if (!result.data?.length) throw new Error("Configurações alteradas em outro aparelho. Tentando novamente.");
+    const current = mergeSyncData(sent, settingsData(state), merged);
+    Object.assign(state, current);
+    Object.assign(syncBaseline, cloneData(merged));
+    saveLocalState();
+  }
+
+  async function persistNormalizedState(data, configOnly = false) {
+    const now = new Date().toISOString();
+    await persistSettings(data);
     if (configOnly) {
       const productRows = (data.products || []).map((product, index) => ({
         id: product.id,
@@ -1194,100 +1616,32 @@
       }
       return true;
     }
-    const recentOrderLimit = daysAgoIso(2);
-    let orderRows = (data.orders || [])
-      .filter((order) => order.status === "open" || String(order.closedAt || order.createdAt || "").slice(0, 10) >= recentOrderLimit)
-      .map(orderRow);
-    let duplicateOpenOrderIds = [];
-    const localOpenOrders = (data.orders || []).filter((order) => order.status === "open");
-    const remoteOpenByCommand = await fetchRemoteOpenOrdersByCommands(localOpenOrders.map((order) => order.command));
-    if (remoteOpenByCommand) {
-      const collapsed = mergeOpenOrdersByCommand(remoteOpenByCommand.concat(localOpenOrders));
-      duplicateOpenOrderIds = collapsed.duplicateIds;
-      data.orders = (data.orders || []).filter((order) => order.status !== "open").concat(collapsed.orders);
-      state.orders = (state.orders || []).filter((order) => order.status !== "open").concat(collapsed.orders);
-      const openIdsByCommand = new Map(collapsed.orders.map((order) => [Number(order.command), order.id]));
-      state.selectedOrders = Array.from(new Set(state.selectedOrders.map((selectedId) => {
-        const selectedOrder = localOpenOrders.find((order) => order.id === selectedId);
-        return selectedOrder ? openIdsByCommand.get(Number(selectedOrder.command)) || selectedId : selectedId;
-      })));
-      orderRows = data.orders
-        .filter((order) => order.status === "open" || String(order.closedAt || order.createdAt || "").slice(0, 10) >= recentOrderLimit)
-        .map(orderRow);
-    }
-    if (orderRows.length) {
-      const remoteOrderRows = await fetchRemoteOrdersByIds(orderRows.map((order) => order.id));
-      if (remoteOrderRows) {
-        const remoteById = new Map(remoteOrderRows.map((order) => [order.id, order]));
-        orderRows = orderRows.filter((order) => {
-          const remoteOrder = remoteById.get(order.id);
-          if (!remoteOrder) return true;
-          return !(order.status === "open" && isTerminalOrderStatus(remoteOrder.status));
-        });
+
+    try {
+      await validatePendingCheckouts(data);
+      const failed = [];
+      const blockedSales = new Set();
+      for (const kind of Object.keys(syncTables)) {
+        const changed = recordsForSync(kind, data).filter(record => !sameSyncData(record, baselineRecord(kind, record.id)));
+        for (const record of changed) {
+          if (kind === "sales" && blockedSales.has(record.id)) continue;
+          if (kind === "clients" && record.entries?.some(entry => blockedSales.has(entry.saleId))) continue;
+          try { await persistRecord(kind, record); }
+          catch (error) {
+            if (error.checkoutSaleId) throw error;
+            failed.push(error);
+            if (kind === "orders" && record.closedBySaleId) blockedSales.add(record.closedBySaleId);
+            if (kind === "sales") blockedSales.add(record.id);
+          }
+        }
       }
+      if (failed.length) throw failed[0];
+    } catch (error) {
+      if (!error.checkoutSaleId) throw error;
+      await rejectPendingCheckout(error.checkoutSaleId, error.message);
+      return false;
     }
-    if (orderRows.length) {
-      const result = await supabaseClient.from("pdv_orders").upsert(orderRows);
-      if (result.error) throw result.error;
-    }
-    if (duplicateOpenOrderIds.length) await closeRemoteDuplicateOrders(duplicateOpenOrderIds);
-    await closeRemoteOpenOrdersForClosedOrders((data.orders || []).filter((order) => order.status !== "open"));
-    const recentSaleLimit = daysAgoIso(14);
-    const saleRows = options.syncSales ? (data.sales || []).filter((sale) => normalizeDateIso(sale.date || sale.createdAt) >= recentSaleLimit).map((sale) => ({
-      id: sale.id,
-      sale_date: normalizeDateIso(sale.date || sale.createdAt),
-      payload: sale,
-      cancelled: (data.cancelledSaleIds || []).includes(sale.id),
-      created_at: sale.createdAt || now,
-      updated_by: currentAccess.id,
-      updated_at: now
-    })) : [];
-    if (saleRows.length) {
-      const result = await supabaseClient.from("pdv_sales").upsert(saleRows);
-      if (result.error) throw result.error;
-    }
-    if (options.syncClients && Array.isArray(data.clients) && data.clients.length) {
-      const remoteClients = await fetchRemoteClients();
-      if (remoteClients) {
-        data.clients = mergeClientsForSync(remoteClients, data.clients, data.cancelledClientEntryIds || []);
-      }
-    }
-    const clientRows = options.syncClients ? (data.clients || []).filter((client) => client.entries && client.entries.length).map((client) => ({
-      id: client.id,
-      name: client.name,
-      phone: client.phone || "",
-      note: client.note || "",
-      payload: client,
-      active: true,
-      updated_by: currentAccess.id,
-      updated_at: now
-    })) : [];
-    if (clientRows.length) {
-      const result = await supabaseClient.from("pdv_clients").upsert(clientRows);
-      if (result.error) throw result.error;
-    }
-    const removalRows = (data.itemRemovals || []).map((entry) => ({
-      id: entry.id,
-      removal_date: entry.date || todayIso(),
-      payload: entry,
-      created_at: entry.createdAt || now,
-      updated_by: currentAccess.id
-    }));
-    if (removalRows.length) {
-      const result = await supabaseClient.from("pdv_item_removals").upsert(removalRows);
-      if (result.error) throw result.error;
-    }
-    const adjustmentRows = (data.orderAdjustments || []).map((entry) => ({
-      id: entry.id,
-      adjustment_date: entry.date || todayIso(),
-      payload: entry,
-      created_at: entry.createdAt || now,
-      updated_by: currentAccess.id
-    }));
-    if (adjustmentRows.length) {
-      const result = await supabaseClient.from("pdv_order_adjustments").upsert(adjustmentRows);
-      if (result.error) throw result.error;
-    }
+    normalizedRemoteAvailable = true;
     return true;
   }
 
@@ -1305,111 +1659,114 @@
     return true;
   }
 
+
   async function syncRemoteState(force = false) {
     if (!supabaseClient || !currentAccess || (!remoteLoaded && !force)) return;
-    if (remoteSaving) {
-      remoteSavePending = true;
-      return;
-    }
+    if (navigator.onLine === false) { renderSyncStatus(); return; }
+    if (remoteSaving) { remoteSavePending = true; return; }
     remoteSaving = true;
-    const syncRevision = localRevision;
-    const syncClients = clientsPendingSync || force;
-    const syncSales = salesPendingSync || force;
-    const localData = stateForRemote();
+    renderSyncStatus();
+    const sent = stateForRemote();
+    const changedClients = recordsForSync("clients", sent).some(record => !sameSyncData(record, baselineRecord("clients", record.id)));
+    const changedSettings = !sameSyncData(settingsData(sent), settingsData(syncBaseline));
+    let succeeded = false;
     try {
-      try {
-        await persistNormalizedState(localData, false, { syncClients, syncSales });
-        if (syncRevision === localRevision) {
-          localPendingSync = false;
-          if (syncClients) markClientsSynced();
-          if (syncSales) salesPendingSync = false;
-        }
-        notifyRemoteStateChanged();
-        return;
-      } catch (error) {
-        console.warn("Falha ao sincronizar tabelas normalizadas", error);
-        remoteSavePending = true;
-        if (currentAccess) {
-          const context = currentAccess.role === "balanca" ? "balanca" : "caixa";
-          setLastAction("Falha ao salvar no Supabase. Tentando sincronizar novamente...", context);
-        }
-        return;
-      }
-      const remoteData = await fetchRemoteRestaurantData();
-      if (remoteData === null) {
-        return;
-      }
-      const mergedData = mergeOperationalState(remoteData, localData);
-      const { error } = await supabaseClient
-        .from("restaurant_state")
-        .upsert({
-          id: "main",
-          data: mergedData,
-          updated_by: currentAccess.id,
-          updated_at: new Date().toISOString()
-        });
-      if (error) console.warn("Falha ao sincronizar Supabase", error);
-      else {
-        if (syncRevision === localRevision) {
-          localPendingSync = false;
-          mergeRemoteState(mergedData);
-        }
-        notifyRemoteStateChanged();
-      }
+      await persistNormalizedState(sent);
+      localPendingSync = hasPendingChanges();
+      if (!localPendingSync) { markClientsSynced(); salesPendingSync = false; }
+      syncError = "";
+      syncRetryAttempt = 0;
+      lastSyncAt = new Date().toISOString();
+      succeeded = true;
+      notifyRemoteStateChanged({ clients: changedClients, settings: changedSettings });
+    } catch (error) {
+      localPendingSync = true;
+      syncError = error.message || "Falha ao enviar. As alterações continuam salvas neste aparelho.";
+      syncRetryAttempt += 1;
     } finally {
       remoteSaving = false;
-      if (remoteSavePending) {
-        remoteSavePending = false;
-        setTimeout(() => syncRemoteState(true), 350);
-      }
+      saveLocalState();
+      const more = remoteSavePending || localPendingSync;
+      remoteSavePending = false;
+      if (more) scheduleRemoteSync(succeeded ? 80 : Math.min(30000, 1000 * 2 ** Math.min(syncRetryAttempt, 5)));
+      if (succeeded) renderOperationalViews();
     }
   }
 
   async function refreshRemoteState(options = {}) {
-    if (!supabaseClient || !currentAccess || remoteSaving || remotePolling) return;
-    if (localPendingSync || Date.now() - lastLocalChangeAt < LOCAL_REMOTE_PROTECTION_MS) return;
+    if (!supabaseClient || !currentAccess || document.hidden || navigator.onLine === false || remoteSaving || remotePolling) return;
+    if (!remoteLoaded) { await loadRemoteState(); return; }
+    if (localPendingSync) { scheduleRemoteSync(); return; }
+    if (Date.now() - lastLocalChangeAt < LOCAL_REMOTE_PROTECTION_MS) return;
     remotePolling = true;
+    const revision = localRevision;
     try {
-      const openOrders = await fetchRemoteOpenOrders();
-      if (openOrders === null) {
-        return;
+      if (options.forceConfig) {
+        const [products, companies] = await Promise.all([
+          supabaseClient.from("pdv_products").select("*").eq("active", true).order("position", { ascending: true }),
+          supabaseClient.from("pdv_companies").select("*").eq("active", true).order("name", { ascending: true })
+        ]);
+        if (products.error || companies.error) throw products.error || companies.error;
+        if (revision !== localRevision || localPendingSync) return;
+        state.products = products.data || state.products;
+        state.companies = companies.data || state.companies;
       }
-      mergeRemoteOpenOrders(openOrders);
-      if (options.forceClients || Date.now() - lastClientPollAt >= CLIENT_POLL_MS) {
-        const clients = await fetchRemoteClients();
-        lastClientPollAt = Date.now();
-        if (clients) {
-          state.clients = mergeClientsForSync(clients, state.clients || [], state.cancelledClientEntryIds || []);
-          saveLocalState();
+      if (options.forceSettings) {
+        const result = await supabaseClient.from("pdv_settings").select("*").eq("id", "main").maybeSingle();
+        if (result.error) throw result.error;
+        if (revision !== localRevision || localPendingSync) return;
+        if (result.data) {
+          const settings = settingsFromRow(result.data);
+          Object.assign(state, settings); Object.assign(syncBaseline, cloneData(settings));
+          applyCancellations(state); applyRemovedOrderItems(state);
         }
       }
-      renderCommands();
-      renderBalancePreview();
-      renderOpenOrders();
-      renderOrderEditor();
-      renderCheckout();
-      renderClients();
-      renderSelectedClient();
-    } finally {
-      remotePolling = false;
-    }
+      const openOrders = await fetchRemoteOpenOrders();
+      if (openOrders === null) throw new Error("Não foi possível atualizar as comandas.");
+      if (revision !== localRevision || localPendingSync) return;
+      mergeReadRecords("orders", openOrders);
+      await reconcileMissingOrders(openOrders);
+      if (revision !== localRevision || localPendingSync) return;
+      collapseDuplicateOpenOrders();
+      if (repairBuffetConversions()) localPendingSync = true;
+      if (localPendingSync) { saveLocalState(); scheduleRemoteSync(); return; }
+      if (options.forceClients || Date.now() - lastClientPollAt >= CLIENT_POLL_MS) {
+        const clients = await fetchRemoteClients();
+        if (clients === null) throw new Error("Não foi possível atualizar o fiado.");
+        if (revision !== localRevision || localPendingSync) return;
+        lastClientPollAt = Date.now();
+        mergeReadRecords("clients", clients);
+      }
+      syncError = "";
+      lastSyncAt = new Date().toISOString();
+      saveLocalState();
+      renderOperationalViews();
+    } catch (error) {
+      syncError = error.message || "Falha ao atualizar.";
+      renderSyncStatus();
+    } finally { remotePolling = false; }
   }
 
   function scheduleRemoteRefresh(delay = 120, options = {}) {
     if (!supabaseClient || !currentAccess) return;
     remoteRefreshNeedsClients = remoteRefreshNeedsClients || !!options.forceClients;
+    remoteRefreshNeedsSettings = remoteRefreshNeedsSettings || !!options.forceSettings;
+    remoteRefreshNeedsConfig = remoteRefreshNeedsConfig || !!options.forceConfig;
     if (remoteRefreshTimer) clearTimeout(remoteRefreshTimer);
     remoteRefreshTimer = setTimeout(() => {
       const forceClients = remoteRefreshNeedsClients;
+      const forceSettings = remoteRefreshNeedsSettings;
+      const forceConfig = remoteRefreshNeedsConfig;
       remoteRefreshNeedsClients = false;
+      remoteRefreshNeedsSettings = false;
+      remoteRefreshNeedsConfig = false;
       remoteRefreshTimer = null;
-      refreshRemoteState({ forceClients });
+      refreshRemoteState({ forceClients, forceSettings, forceConfig });
     }, delay);
   }
 
   function startRemotePolling() {
     if (!supabaseClient || remotePollTimer) return;
-    refreshRemoteState();
     remotePollTimer = setInterval(refreshRemoteState, REMOTE_POLL_MS);
   }
 
@@ -1437,7 +1794,8 @@
     const configData = stateForRemote();
     try {
       await persistNormalizedState(configData, true);
-      notifyRemoteStateChanged();
+      saveLocalState();
+      notifyRemoteStateChanged({ settings: true, config: true });
       render();
       return;
     } catch (error) {
@@ -1479,8 +1837,8 @@
     if (!supabaseClient || remoteChannel) return;
     remoteChannel = supabaseClient
       .channel("restaurant-state")
-      .on("broadcast", { event: "state_changed" }, () => {
-        scheduleRemoteRefresh();
+      .on("broadcast", { event: "state_changed" }, ({ payload }) => {
+        scheduleRemoteRefresh(150, { forceClients: !!payload?.clients, forceSettings: !!payload?.settings, forceConfig: !!payload?.config });
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "pdv_orders" }, () => {
         scheduleRemoteRefresh();
@@ -1488,15 +1846,18 @@
       .on("postgres_changes", { event: "*", schema: "public", table: "pdv_clients" }, () => {
         scheduleRemoteRefresh(250, { forceClients: true });
       })
+      .on("postgres_changes", { event: "*", schema: "public", table: "pdv_settings" }, () => {
+        scheduleRemoteRefresh(250, { forceSettings: true });
+      })
       .subscribe();
   }
 
-  function notifyRemoteStateChanged() {
+  function notifyRemoteStateChanged(changed = {}) {
     if (!remoteChannel) return;
     remoteChannel.send({
       type: "broadcast",
       event: "state_changed",
-      payload: { at: new Date().toISOString() }
+      payload: { at: new Date().toISOString(), ...changed }
     });
   }
 
@@ -1643,7 +2004,7 @@
   }
 
   function percentValue(value) {
-    const parsed = Number(String(value || "").replace(",", "."));
+    const parsed = Number(String(value || "").trim().replace(/%$/, "").trim().replace(",", "."));
     return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
   }
 
@@ -1690,41 +2051,6 @@
       emvField("62", emvField("05", "***"));
     const withCrc = `${payload}6304`;
     return withCrc + crc16(withCrc);
-  }
-
-  function isCieloPaymentMethod(method) {
-    return cieloPaymentMethods.includes(method);
-  }
-
-  function cieloSaleReference() {
-    const commands = selectedOrders().map((order) => order.command).sort((a, b) => a - b);
-    return commands.length ? `ESTALAGEM-${todayIso()}-${commands.join("-")}` : `ESTALAGEM-${Date.now()}`;
-  }
-
-  function cieloPaymentRequest(method, amount) {
-    const orders = selectedOrders();
-    return {
-      amount: Number(amount || 0),
-      method,
-      saleReference: cieloSaleReference(),
-      terminalLogicalNumber: state.cieloIntegration.terminalLogicalNumber,
-      commands: orders.map((order) => order.command),
-      orders: orders.map((order) => ({
-        id: order.id,
-        command: order.command,
-        total: orderTotal(order)
-      }))
-    };
-  }
-
-  async function requestCieloPayment(method, amount) {
-    if (!supabaseClient) throw new Error("Supabase indisponivel.");
-    if (!isCieloPaymentMethod(method)) throw new Error("Forma de pagamento fora da Cielo.");
-    const { data, error } = await supabaseClient.functions.invoke("cielo-payment", {
-      body: cieloPaymentRequest(method, amount)
-    });
-    if (error) throw error;
-    return data;
   }
 
   function checkoutTotalRaw() {
@@ -1823,18 +2149,24 @@
     };
     state.itemRemovals.push(entry);
     logAudit("order_item_removed", entry);
+    return entry;
   }
 
-  function requestOrderItemRemoval(order, itemId, context) {
+  async function requestOrderItemRemoval(order, itemId, context) {
     if (!canRemoveOrderItems()) return;
-    if (context !== "caixa") {
-      removeOrderItem(order, itemId, context);
+    const current = state.orders.find(entry => entry.id === order.id);
+    const item = current?.items.find(entry => entry.id === itemId);
+    if (!item || current.status !== "open") return;
+    const shown = cloneData(item);
+    if (!await confirmAction(`Remover ${itemDisplayName(item)} da comanda ${current.command}?`, "Remover item", "Remover")) return;
+    const latest = state.orders.find(entry => entry.id === order.id);
+    if (!latest || latest.status !== "open") return;
+    if (!sameSyncData(shown, latest.items.find(entry => entry.id === itemId))) {
+      await confirmAction("O item mudou em outro aparelho. Confira a quantidade atual antes de remover.", "Comanda atualizada", "Entendi", true);
       return;
     }
-    const item = order.items.find((entry) => entry.id === itemId);
-    if (!item) return;
-    state.pendingRemoval = { orderId: order.id, itemId };
-    renderRemovalModal();
+    state.pendingRemoval = null;
+    removeOrderItem(latest, itemId, context);
   }
 
   function removeOrderItem(order, itemId, context, reason = "") {
@@ -1842,7 +2174,8 @@
     const currentOrder = state.orders.find((entry) => entry.id === order.id) || order;
     const item = currentOrder.items.find((entry) => entry.id === itemId);
     if (!item) return;
-    registerItemRemoval(currentOrder, item, context, reason);
+    const removal = registerItemRemoval(currentOrder, item, context, reason);
+    undoRemoval = { orderId: currentOrder.id, item: cloneData(item), removalId: removal?.id, context };
     if (!state.removedOrderItemIds.includes(item.id)) state.removedOrderItemIds.push(item.id);
     currentOrder.items = currentOrder.items.filter((entry) => entry.id !== itemId);
     currentOrder.updatedAt = new Date().toISOString();
@@ -1859,6 +2192,74 @@
     render();
   }
 
+  function undoItemRemoval() {
+    if (!undoRemoval || !canRemoveOrderItems()) return false;
+    const undo = undoRemoval;
+    const order = state.orders.find(entry => entry.id === undo.orderId);
+    if (!order || order.status === "closed" || saleAlreadyClosedOrder(state.sales, { ...order, status: "open" })) {
+      alert("Esta comanda já foi fechada. Não é possível desfazer a remoção.");
+      return false;
+    }
+    if (!order.items.some(item => item.id === undo.item.id)) order.items.push(cloneData(undo.item));
+    order.status = "open";
+    delete order.closedAt;
+    order.updatedAt = new Date().toISOString();
+    state.removedOrderItemIds = state.removedOrderItemIds.filter(itemId => itemId !== undo.item.id);
+    const removal = state.itemRemovals.find(entry => entry.id === undo.removalId);
+    if (removal) { removal.undone = true; removal.undoneAt = order.updatedAt; }
+    logAudit("order_item_removal_undone", { orderId: order.id, itemId: undo.item.id, removalId: undo.removalId });
+    undoRemoval = null;
+    resetCheckoutAfterOrderChange(order.id);
+    setLastAction(`${undo.item.name}: remoção desfeita na comanda ${order.command}.`, undo.context);
+    saveState();
+    render();
+    return true;
+  }
+
+  function renderUndoRemoval() {
+    const notice = $("#undoRemovalNotice");
+    if (!notice) return;
+    notice.hidden = !undoRemoval;
+    if (undoRemoval) $("#undoRemovalText").textContent = `${undoRemoval.item.name} removido.`;
+  }
+
+  function editClientPaymentMethod(clientId, entryId, method) {
+    if (!currentAccess || !["admin", "caixa"].includes(currentAccess.role) || !paymentMethods.filter(value => value !== "Fiado").includes(method)) return false;
+    const client = state.clients.find(entry => entry.id === clientId);
+    const payment = client?.entries.find(entry => entry.id === entryId && entry.type === "payment");
+    if (!payment || payment.method === method) return false;
+    const change = { id: id(), from: payment.method, to: method, at: new Date().toISOString(), userId: currentAccess.id, userName: currentAccess.name };
+    payment.methodHistory = [...(payment.methodHistory || []), change];
+    payment.method = method;
+    payment.updatedAt = change.at;
+    client.updatedAt = change.at;
+    logAudit("debt_payment_method_changed", { clientId, paymentId: entryId, ...change });
+    setLastAction("Forma de pagamento corrigida. Valor recebido preservado.", "fiado");
+    saveState({ clientsChanged: true });
+    render();
+    return true;
+  }
+
+  function setClientArchived(clientId, archived) {
+    if (!currentAccess || !["admin", "caixa"].includes(currentAccess.role)) return false;
+    const client = state.clients.find(entry => entry.id === clientId);
+    if (!client) return false;
+    if (archived && Math.abs(clientBalance(client)) >= 0.005) {
+      void confirmAction("Este cliente ainda tem saldo. Acerte o saldo antes de excluir da lista.", "Cliente com saldo", "Entendi", true);
+      return false;
+    }
+    client.archived = !!archived;
+    client.updatedAt = new Date().toISOString();
+    if (archived) {
+      if (state.selectedClientId === clientId) state.selectedClientId = null;
+      if (state.selectedCheckoutClientId === clientId) state.selectedCheckoutClientId = null;
+    }
+    logAudit(archived ? "client_archived" : "client_restored", { clientId });
+    saveState({ clientsChanged: true });
+    render();
+    return true;
+  }
+
   function addItemToSelected(name, price) {
     if (!canFullyEditOrders()) return;
     if (!state.selectedCommand) {
@@ -1873,10 +2274,32 @@
     logAudit("order_item_added", { command: order.command, name, price });
   }
 
+  function repairBuffetConversions() {
+    let changed = false;
+    for (const order of state.orders) {
+      if (order.status !== "open") continue;
+      for (const item of order.items) {
+        if (itemQuantity(item) !== 1) continue;
+        const adjustment = state.orderAdjustments.find(entry => entry.itemId === item.id &&
+          entry.toName === "Refeição à vontade" && entry.toName === item.name && isWeightMeal({name: entry.fromName}) &&
+          entry.createdAt && Date.parse(entry.createdAt) === Date.parse(item.updatedAt) &&
+          Number(entry.fromPrice) === itemUnitPrice(item) && Number(entry.toPrice) > 0 && Number(entry.toPrice) !== itemUnitPrice(item));
+        if (!adjustment) continue;
+        item.unitPrice = Number(adjustment.toPrice);
+        item.price = itemTotal(item);
+        item.updatedAt = new Date().toISOString();
+        order.updatedAt = item.updatedAt;
+        changed = true;
+      }
+    }
+    return changed;
+  }
+
   function replaceWeightWithBuffet(order, itemId) {
     if (!currentAccess || !["caixa", "balanca", "admin"].includes(currentAccess.role)) return;
+    order = order && state.orders.find(entry => entry.id === order.id);
     const item = order && order.items.find((entry) => entry.id === itemId);
-    if (!item || !isWeightMeal(item)) return;
+    if (!item || order.status !== "open" || !isWeightMeal(item)) return;
     const adjustment = {
       id: id(),
       date: todayIso(),
@@ -1892,7 +2315,8 @@
       role: currentAccess.role
     };
     item.name = adjustment.toName;
-    item.price = adjustment.toPrice;
+    item.unitPrice = Number(adjustment.toPrice);
+    item.price = itemTotal(item);
     item.updatedAt = adjustment.createdAt;
     order.updatedAt = adjustment.createdAt;
     state.orderAdjustments.push(adjustment);
@@ -1920,10 +2344,12 @@
       createdAt: new Date().toISOString(),
       date: todayIso(),
       orders: orders.map((order) => ({
+        id: order.id,
         command: order.command,
         items: order.items,
         total: orderTotal(order)
       })),
+      orderIds: orders.map(order => order.id),
       subtotal,
       total,
       discountCompany: company ? company.name : null,
@@ -1959,6 +2385,7 @@
     orders.forEach((order) => {
       const now = new Date().toISOString();
       order.status = "closed";
+      order.closedBySaleId = sale.id;
       order.closedAt = now;
       order.updatedAt = now;
     });
@@ -1995,6 +2422,7 @@
 
   function activateView(view) {
     const target = canAccess(view) ? view : firstAllowedView();
+    if (target === "fiado") scheduleRemoteRefresh(0, { forceClients: true });
     $$(".tab").forEach((item) => item.classList.toggle("active", item.dataset.view === target));
     $$(".view").forEach((item) => item.classList.toggle("active", item.id === `view-${target}`));
   }
@@ -2043,7 +2471,7 @@
     wireMenuCategoryToggles(box);
     box.querySelectorAll("[data-add-product]").forEach((btn) => btn.addEventListener("click", () => {
       const product = state.products.find((item) => item.id === btn.dataset.addProduct);
-      if (!product) return;
+      if (!product || !isProductAvailable(product)) return;
       if (!state.selectedCommand) {
         alert("Selecione uma comanda primeiro.");
         return;
@@ -2071,7 +2499,7 @@
         <span>${itemDisplayName(item)}</span>
         <strong>${money.format(itemTotal(item))}</strong>
         <div class="line-item-actions">
-          ${item.groupedQuantity ? `<button class="qty-action" data-balance-qty="${item.id}" data-delta="-1" type="button">−</button><span class="qty-pill">${itemQuantity(item)}</span><button class="qty-action" data-balance-qty="${item.id}" data-delta="1" type="button">+</button>` : ""}
+          ${supportsItemQuantity(item) ? `<button class="qty-action" data-balance-qty="${item.id}" data-delta="-1" type="button">−</button><span class="qty-pill">${itemQuantity(item)}</span><button class="qty-action" data-balance-qty="${item.id}" data-delta="1" type="button">+</button>` : ""}
           ${canReplace && isWeightMeal(item) ? `<button class="replace-meal" data-balance-replace-weight="${item.id}">Trocar por à vontade</button>` : ""}
           <button class="remove-item" data-order="${order.id}" data-item="${item.id}">×</button>
         </div>
@@ -2109,7 +2537,7 @@
           <span>${itemDisplayName(item)}</span>
           <strong>${money.format(itemTotal(item))}</strong>
           <div class="line-item-actions">
-            ${item.groupedQuantity ? `<button class="qty-action" data-focus-qty="${item.id}" data-delta="-1" type="button">−</button><span class="qty-pill">${itemQuantity(item)}</span><button class="qty-action" data-focus-qty="${item.id}" data-delta="1" type="button">+</button>` : ""}
+            ${supportsItemQuantity(item) ? `<button class="qty-action" data-focus-qty="${item.id}" data-delta="-1" type="button">−</button><span class="qty-pill">${itemQuantity(item)}</span><button class="qty-action" data-focus-qty="${item.id}" data-delta="1" type="button">+</button>` : ""}
             ${canReplace && isWeightMeal(item) ? `<button class="replace-meal" data-focus-replace-weight="${item.id}">Trocar por à vontade</button>` : ""}
             <button class="remove-item" data-focus-item="${item.id}">×</button>
           </div>
@@ -2130,7 +2558,7 @@
     wireMenuCategoryToggles(productsBox);
     productsBox.querySelectorAll("[data-focus-product]").forEach((btn) => btn.addEventListener("click", () => {
       const product = state.products.find((item) => item.id === btn.dataset.focusProduct);
-      if (!product) return;
+      if (!product || !isProductAvailable(product)) return;
       const order = getOrCreateOrder(state.selectedCommand);
       addProductToOrder(order, product, "balanca");
       saveState();
@@ -2178,7 +2606,7 @@
         <span>${itemDisplayName(item)}</span>
         <strong>${money.format(itemTotal(item))}</strong>
         <div class="line-item-actions">
-          ${item.groupedQuantity ? `<button class="qty-action" data-checkout-qty="${item.id}" data-delta="-1" type="button">−</button><span class="qty-pill">${itemQuantity(item)}</span><button class="qty-action" data-checkout-qty="${item.id}" data-delta="1" type="button">+</button>` : ""}
+          ${supportsItemQuantity(item) ? `<button class="qty-action" data-checkout-qty="${item.id}" data-delta="-1" type="button">−</button><span class="qty-pill">${itemQuantity(item)}</span><button class="qty-action" data-checkout-qty="${item.id}" data-delta="1" type="button">+</button>` : ""}
           ${canReplace && isWeightMeal(item) ? `<button class="replace-meal" data-replace-weight="${item.id}">Trocar por à vontade</button>` : ""}
           ${canRemove ? `<button class="remove-item" data-checkout-item="${item.id}">×</button>` : ""}
         </div>
@@ -2238,7 +2666,7 @@
     wireMenuCategoryToggles(box);
     box.querySelectorAll("[data-add-open-product]").forEach((btn) => btn.addEventListener("click", () => {
       const product = state.products.find((item) => item.id === btn.dataset.addOpenProduct);
-      if (!product) return;
+      if (!product || !isProductAvailable(product)) return;
       addProductToOrder(order, product, "caixa");
       resetCheckoutAfterOrderChange(order.id);
       saveState();
@@ -2261,6 +2689,12 @@
       ? `${discountParts.join(" + ")}: desconto de ${money.format(discount)}`
       : "Nenhum desconto aplicado.";
     renderDiscountButtons();
+    const hasFiado = $("#paymentMethod").value === "Fiado" || state.pendingPayments.some((p) => p.method === "Fiado");
+    $("#fiadoSelectBox").classList.toggle("visible", hasFiado);
+    $$(".discount-btn").forEach((btn) => {
+      btn.disabled = hasFiado;
+      btn.title = hasFiado ? "Desconto de empresa não se aplica ao fiado." : "";
+    });
     const overage = paidOverage();
     $("#changeBox").classList.toggle("visible", overage > 0);
     $("#keepChangeBtn").classList.toggle("visible", overage > 0);
@@ -2269,6 +2703,7 @@
     if (!overage) $("#changeGiven").value = "";
     $("#checkoutSummary").textContent = `Pago: ${money.format(paidTotal())} | Restante: ${money.format(remainingTotal())}`;
     renderPaymentList();
+    renderClientOptions();
   }
 
   function pixCheckoutAmount() {
@@ -2346,7 +2781,7 @@
     const hasFiado = $("#paymentMethod").value === "Fiado" || state.pendingPayments.some((p) => p.method === "Fiado");
     $("#discountRow").innerHTML = state.companies.map((company) => `
       <button class="discount-btn logo-discount ${company.name === state.activeDiscount || company.id === state.activeDiscount ? "active" : ""}" data-company="${company.id}" aria-label="Aplicar desconto ${company.name} de ${company.discount}%">
-        ${company.logo ? `<img src="${company.logo}" alt="${company.name}" />` : `<strong>${company.name}</strong>`}
+        ${company.logo ? `<img src="${company.logo}" alt="${escapeHtml(company.name)}" />` : `<strong>${company.name}</strong>`}
         <span>-${company.discount}%</span>
       </button>
     `).join("") + '<button class="ghost" id="removeDiscountBtn" type="button">Sem desconto</button>';
@@ -2369,7 +2804,8 @@
         <button class="chip-x" data-payment="${payment.id}">×</button>
       </div>
     `).join("");
-    box.querySelectorAll(".chip-x").forEach((btn) => btn.addEventListener("click", () => {
+    box.querySelectorAll(".chip-x").forEach((btn) => btn.addEventListener("click", async () => {
+      if (!await confirmAction("Remover esta divisão de pagamento?", "Remover pagamento", "Remover")) return;
       state.pendingPayments = state.pendingPayments.filter((payment) => payment.id !== btn.dataset.payment);
       saveLocalState();
       render();
@@ -2380,13 +2816,14 @@
     const search = ($("#clientSearch").value || "").toLowerCase();
     const box = $("#clientList");
     const clients = state.clients
+      .filter((client) => !client.archived)
       .filter((client) => search ? true : clientBalance(client) > 0)
       .filter((client) => !search || `${client.name} ${client.phone}`.toLowerCase().includes(search))
       .sort((a, b) => a.name.localeCompare(b.name));
     box.innerHTML = clients.map((client) => `
       <button class="client-card ${client.id === state.selectedClientId ? "active" : ""}" data-client="${client.id}">
-        <strong>${client.name}</strong>
-        <span>${client.note || "Sem identificação"} | ${money.format(clientBalance(client))}</span>
+        <strong>${escapeHtml(client.name)}</strong>
+        <span>${escapeHtml(client.note || "Sem identificação")} | ${money.format(clientBalance(client))}</span>
       </button>
     `).join("") || '<div class="empty">Nenhum cliente encontrado.</div>';
     box.querySelectorAll(".client-card").forEach((btn) => btn.addEventListener("click", () => {
@@ -2415,6 +2852,9 @@
     $("#whatsappBtn").disabled = !client || !client.phone;
     $("#openDebtDetailBtn").disabled = !client;
     $("#editClientBtn").disabled = !client;
+    $("#archiveClientBtn").hidden = !client || !!client.archived;
+    $("#restoreClientBtn").hidden = !client || !client.archived;
+    $("#payDebtBtn").disabled = !client || !!client.archived;
     const history = $("#debtHistory");
     if (!client) {
       history.innerHTML = '<div class="empty">Escolha um cliente para ver o histórico.</div>';
@@ -2436,12 +2876,17 @@
       const reverseAction = isAdmin() && entry.type === "debt" && entry.saleId
         ? `<button class="warn small-action history-action" data-reverse-debt="${entry.id}" type="button">Estornar comanda</button>`
         : "";
+      const editMethod = entry.type === "payment" && currentAccess && ["admin", "caixa"].includes(currentAccess.role)
+        ? `<div class="payment-method-edit"><label>Forma de pagamento <select data-debt-payment-method="${entry.id}" aria-label="Forma de pagamento do recebimento">${paymentMethods.filter(method => method !== "Fiado").map(method => `<option value="${method}" ${method === entry.method ? "selected" : ""}>${method}</option>`).join("")}</select></label><button class="secondary small-action" data-save-debt-payment="${entry.id}" type="button">Salvar forma de pagamento</button></div>` : "";
+      const methodHistory = (entry.methodHistory || []).map(change => `<div class="payment-method-history">${escapeHtml(change.from)} → ${escapeHtml(change.to)} · ${escapeHtml(change.userName || "Usuário")} · ${fullDateFmt.format(new Date(change.at))}</div>`).join("");
       return `
         <details class="history-item" data-debt-entry="${entry.id}" ${isOpen ? "open" : ""}>
           <summary>${label}: ${money.format(entry.amount)}</summary>
           <span>${formatDate(entry.date)} ${entry.origin ? "| " + entry.origin : ""}</span>
           ${detail}
           ${reverseAction}
+          ${editMethod}
+          ${methodHistory}
         </details>
       `;
     }).join("");
@@ -2455,6 +2900,11 @@
     }));
     history.querySelectorAll("[data-reverse-debt]").forEach((btn) => btn.addEventListener("click", () => {
       reverseClientOrderDebt(client.id, btn.dataset.reverseDebt);
+    }));
+    history.querySelectorAll("[data-save-debt-payment]").forEach(btn => btn.addEventListener("click", () => {
+      const entryId = btn.dataset.saveDebtPayment;
+      const select = history.querySelector(`[data-debt-payment-method="${entryId}"]`);
+      editClientPaymentMethod(client.id, entryId, select.value);
     }));
   }
 
@@ -2814,24 +3264,32 @@
     renderAgenda();
   }
 
-  function deleteSchedule(scheduleId) {
+  async function deleteSchedule(scheduleId) {
     const schedule = state.schedules.find((item) => item.id === scheduleId);
     if (!schedule) return;
-    if (!confirm(`Remover a tarefa "${schedule.name}"?`)) return;
+    if (!await confirmAction(`Remover a tarefa "${schedule.name}"?`, "Remover tarefa", "Remover")) return;
     if (!state.removedScheduleIds.includes(schedule.id)) state.removedScheduleIds.push(schedule.id);
     state.schedules = state.schedules.filter((item) => item.id !== scheduleId);
     saveState();
     renderAgenda();
   }
 
-  function reverseClientOrderDebt(clientId, entryId) {
+  async function reverseClientOrderDebt(clientId, entryId) {
     if (!isAdmin()) return;
-    const client = state.clients.find((item) => item.id === clientId);
-    const entry = client && client.entries.find((item) => item.id === entryId);
+    let client = state.clients.find((item) => item.id === clientId);
+    let entry = client && client.entries.find((item) => item.id === entryId);
     if (!client || !entry || entry.type !== "debt") return;
+    const shown = cloneData(entry);
     const commands = (entry.orders || []).map((order) => "Comanda " + order.command).join(", ");
-    const ok = confirm(`Estornar ${money.format(entry.amount)} do cliente ${client.name}${commands ? " (" + commands + ")" : ""}?`);
+    const ok = await confirmAction(`Estornar ${money.format(entry.amount)} do cliente ${client.name}${commands ? " (" + commands + ")" : ""}?`, "Estornar lançamento", "Estornar");
     if (!ok) return;
+    client = state.clients.find(item => item.id === clientId);
+    entry = client?.entries.find(item => item.id === entryId);
+    if (!entry) return;
+    if (!sameSyncData(shown, entry)) {
+      await confirmAction("O lançamento mudou em outro aparelho. Confira os dados antes de estornar.", "Lançamento atualizado", "Entendi", true);
+      return;
+    }
     if (!state.cancelledClientEntryIds.includes(entry.id)) state.cancelledClientEntryIds.push(entry.id);
     if (entry.saleId && !state.cancelledSaleIds.includes(entry.saleId)) state.cancelledSaleIds.push(entry.saleId);
     client.entries = client.entries.filter((item) => item.id !== entry.id);
@@ -2885,14 +3343,21 @@
     render();
   }
 
-  function cancelSale(saleId, reopen = false) {
+  async function cancelSale(saleId, reopen = false) {
     if (!isAdmin()) return;
-    const sale = state.sales.find((item) => item.id === saleId);
+    let sale = state.sales.find((item) => item.id === saleId);
     if (!sale) return;
+    const shown = cloneData(sale);
     const commands = sale.orders.map((order) => "Comanda " + order.command).join(", ");
     const action = reopen ? "cancelar e reabrir" : "cancelar";
-    const ok = confirm(`Deseja ${action} a venda de ${money.format(sale.total)} (${commands})?`);
+    const ok = await confirmAction(`Deseja ${action} a venda de ${money.format(sale.total)} (${commands})?`, "Cancelar venda", reopen ? "Cancelar e reabrir" : "Cancelar venda");
     if (!ok) return;
+    sale = state.sales.find(item => item.id === saleId);
+    if (!sale) return;
+    if (!sameSyncData(shown, sale)) {
+      await confirmAction("A venda mudou em outro aparelho. Confira os dados antes de cancelar.", "Venda atualizada", "Entendi", true);
+      return;
+    }
     if (!state.cancelledSaleIds.includes(sale.id)) state.cancelledSaleIds.push(sale.id);
     removeFiadoDebtForSale(sale.id);
     state.sales = state.sales.filter((item) => item.id !== sale.id);
@@ -2921,12 +3386,75 @@
 
   function renderClientOptions() {
     const select = $("#checkoutClient");
-    select.innerHTML = state.clients.map((client) => `<option value="${client.id}">${client.name} - ${money.format(clientBalance(client))}</option>`).join("");
-    if (state.selectedCheckoutClientId && state.clients.some((client) => client.id === state.selectedCheckoutClientId)) {
+    select.innerHTML = state.clients.filter(client => !client.archived).map((client) => `<option value="${client.id}">${escapeHtml(client.name)} - ${money.format(clientBalance(client))}</option>`).join("");
+    if (state.selectedCheckoutClientId && state.clients.some((client) => client.id === state.selectedCheckoutClientId && !client.archived)) {
       select.value = state.selectedCheckoutClientId;
     } else if (select.value) {
       state.selectedCheckoutClientId = select.value;
     }
+  }
+
+  const productSortOptions = {manual: "Ordem manual", alphabetical: "Ordem alfabética", "price-desc": "Maior valor primeiro", "price-asc": "Menor valor primeiro", popularity: "Mais vendidos · 30 dias"};
+
+  function sortedProducts(products, category) {
+    const mode = state.productSortModes?.[category] || (category === "doces" ? "price-desc" : "manual");
+    if (mode === "manual") return products.slice();
+    const nameOrder = (a, b) => a.name.localeCompare(b.name, "pt-BR", {sensitivity: "base", numeric: true});
+    return products.slice().sort((a, b) => {
+      if (mode === "alphabetical") return nameOrder(a, b);
+      if (mode === "price-desc") return Number(b.price) - Number(a.price) || nameOrder(a, b);
+      if (mode === "price-asc") return Number(a.price) - Number(b.price) || nameOrder(a, b);
+      const counts = state.productPopularity?.counts || {};
+      return (counts[b.id] || 0) - (counts[a.id] || 0) || nameOrder(a, b);
+    });
+  }
+
+  function popularityCounts(sales) {
+    const counts = {};
+    for (const sale of sales) {
+      for (const order of sale.orders || []) for (const item of order.items || []) {
+        const productId = item.productId || state.products.find(product => normalizeText(product.name) === normalizeText(item.name))?.id;
+        if (productId) counts[productId] = (counts[productId] || 0) + itemQuantity(item);
+      }
+    }
+    return counts;
+  }
+
+  async function fetchProductPopularity() {
+    const from = daysAgoIso(29), to = todayIso();
+    // The public preview never connects to the restaurant's backend.
+    if (!supabaseClient) {
+      const localSales = state.sales.filter((sale) => {
+        const date = sale.date || String(sale.createdAt || "").slice(0, 10);
+        return !sale.cancelled && date >= from && date <= to;
+      });
+      return { from, to, counts: popularityCounts(localSales), updatedAt: new Date().toISOString() };
+    }
+    const sales = new Map();
+    for (let offset = 0; ; offset += 500) {
+      const result = await supabaseClient.from("pdv_sales").select("id, payload, sale_date, created_at").eq("cancelled", false)
+        .gte("sale_date", from).lt("sale_date", addDaysIso(to, 1)).order("id", {ascending: true}).range(offset, offset + 499);
+      if (result.error) throw result.error;
+      for (const row of result.data || []) sales.set(row.id, saleFromRow(row));
+      if ((result.data || []).length < 500) break;
+    }
+    return {from, to, counts: popularityCounts([...sales.values()]), updatedAt: new Date().toISOString()};
+  }
+
+  async function setProductSort(category, mode) {
+    if (currentAccess?.role !== "admin" || productSortBusy || !Object.hasOwn(productSortOptions, mode)) return;
+    productSortBusy = true;
+    const select = $(`[data-product-sort="${category}"]`);
+    if (select) select.disabled = true;
+    try {
+      if (mode === "popularity") state.productPopularity = await fetchProductPopularity();
+      state.productSortModes[category] = mode;
+      document.activeElement?.blur();
+      saveState();
+      await syncRemoteState();
+    } catch (error) {
+      await confirmAction("Não foi possível calcular a ordem. Tente novamente com conexão. A ordem anterior foi mantida.", "Ordenação de produtos", "Entendi", true);
+    } finally { productSortBusy = false; render(); }
   }
 
   function renderProducts() {
@@ -2935,7 +3463,8 @@
     $("#commandMax").value = state.commandMax;
     setMoneyInput($("#buffetPrice"), state.buffetPrice);
     $("#pixKey").value = state.pixKey || "";
-    productList.innerHTML = state.products.map((product, index) => `
+    const expanded = new Set(Array.from(productList.querySelectorAll("[data-config-category][open]")).map(group => group.dataset.configCategory));
+    const productRow = (product) => `
       <div class="product-row ${state.productMoveSelected === product.id ? "move-selected" : ""}" draggable="true" data-product-row="${product.id}">
         <div class="drag-handle" title="Arrastar">☰</div>
         <div class="product-image-preview">
@@ -2947,12 +3476,25 @@
           <select data-product-category="${product.id}" aria-label="Categoria do produto">
             ${Object.entries(productCategories).map(([value, label]) => `<option value="${value}" ${(product.category || inferProductCategory(product.name)) === value ? "selected" : ""}>${label}</option>`).join("")}
           </select>
-          <input class="product-image-input" data-product-image="${product.id}" type="file" accept="image/*" aria-label="Imagem do produto" />
         </div>
-        <button class="secondary small-action" data-product-save="${product.id}" type="button">Salvar</button>
-        <button class="remove-item" data-product="${product.id}">×</button>
+        <div class="product-row-actions">
+          <label class="upload-control">Adicionar imagem<input class="product-image-input" data-product-image="${product.id}" type="file" accept="image/*" aria-label="Adicionar imagem de ${escapeHtml(product.name)}" /></label>
+          <button class="secondary small-action" data-product-save="${product.id}" type="button">Salvar</button>
+          <button class="remove-item" data-product="${product.id}" aria-label="Excluir produto ${escapeHtml(product.name)}">×</button>
+        </div>
       </div>
-    `).join("");
+    `;
+    productList.innerHTML = Object.entries(productCategories).map(([category, label]) => {
+      const products = sortedProducts(state.products.filter(product => productCategory(product) === category), category);
+      if (!products.length) return "";
+      return `<details class="config-category" data-config-category="${category}" ${expanded.has(category) ? "open" : ""}>
+        <summary><span>${label}</span><span class="category-count">${products.length}</span></summary>
+        <div class="category-sort"><label>Ordenar por<select data-product-sort="${category}" ${productSortBusy ? "disabled" : ""}>${Object.entries(productSortOptions).map(([value, title]) => `<option value="${value}" ${value === (state.productSortModes[category] || (category === "doces" ? "price-desc" : "manual")) ? "selected" : ""}>${title}</option>`).join("")}</select></label>${state.productSortModes[category] === "popularity" && state.productPopularity ? `<small>Período: ${formatDate(state.productPopularity.from)} a ${formatDate(state.productPopularity.to)}</small><button class="ghost small-action" type="button" data-refresh-popularity="${category}" ${productSortBusy ? "disabled" : ""}>Atualizar mais vendidos</button>` : ""}</div>
+        <div class="config-category-products">${products.map(productRow).join("")}</div>
+      </details>`;
+    }).join("");
+    productList.querySelectorAll("[data-refresh-popularity]").forEach(button => button.addEventListener("click", () => setProductSort(button.dataset.refreshPopularity, "popularity")));
+    productList.querySelectorAll("[data-product-sort]").forEach(select => select.addEventListener("change", () => setProductSort(select.dataset.productSort, select.value)));
     productList.querySelectorAll("[data-product-price]").forEach((input) => {
       input.addEventListener("input", () => setMoneyInput(input, parseMoney(input.value)));
     });
@@ -2997,6 +3539,7 @@
         if (from >= 0 && to >= 0) {
           const [moved] = state.products.splice(from, 1);
           state.products.splice(to, 0, moved);
+          state.productSortModes[productCategory(moved)] = "manual";
         }
         state.productMoveSelected = null;
         await saveConfigState();
@@ -3018,11 +3561,14 @@
         if (from < 0 || to < 0) return;
         const [dragged] = state.products.splice(from, 1);
         state.products.splice(to, 0, dragged);
+        state.productSortModes[productCategory(dragged)] = "manual";
         await saveConfigState();
         render();
       });
     });
     productList.querySelectorAll(".remove-item").forEach((btn) => btn.addEventListener("click", async () => {
+      const product = state.products.find(item => item.id === btn.dataset.product);
+      if (!product || !await confirmAction(`Excluir o produto "${product.name}"? As vendas anteriores serão mantidas.`)) return;
       state.products = state.products.filter((product) => product.id !== btn.dataset.product);
       await saveConfigState();
       btn.blur();
@@ -3034,17 +3580,17 @@
     $("#companyList").innerHTML = state.companies.map((company) => `
       <div class="company-row">
         <div class="company-logo-preview">
-          ${company.logo ? `<img src="${company.logo}" alt="${company.name}" />` : `<span>Sem imagem</span>`}
+          ${company.logo ? `<img src="${company.logo}" alt="${escapeHtml(company.name)}" />` : `<span>Sem imagem</span>`}
         </div>
-        <input value="${company.name}" data-company-name="${company.id}" aria-label="Nome da empresa" />
-        <input value="${String(company.discount).replace(".", ",")}" data-company-discount="${company.id}" inputmode="decimal" aria-label="Desconto da empresa" />
-        <label class="file-label small-file">
-          Imagem
-          <input type="file" accept="image/*" data-company-logo="${company.id}" />
+        <input value="${escapeHtml(company.name)}" data-company-name="${company.id}" aria-label="Nome da empresa" />
+        <input value="${String(company.discount).replace(".", ",")}%" data-company-discount="${company.id}" inputmode="decimal" aria-label="Desconto da empresa" />
+        <div class="company-row-actions"><label class="upload-control small-file">
+          Adicionar imagem
+          <input type="file" accept="image/*" data-company-logo="${company.id}" aria-label="Adicionar imagem de ${escapeHtml(company.name)}" />
         </label>
-        <button class="remove-item" data-company-remove="${company.id}">×</button>
+        <button class="company-delete" data-company-remove="${company.id}">Excluir empresa</button></div>
       </div>
-    `).join("") || '<div class="empty">Nenhuma empresa cadastrada.</div>';
+    `).join("");
     $("#companyList").querySelectorAll("[data-company-name]").forEach((input) => input.addEventListener("change", async () => {
       const company = state.companies.find((item) => item.id === input.dataset.companyName);
       if (!company) return;
@@ -3073,6 +3619,7 @@
     }));
     $("#companyList").querySelectorAll("[data-company-remove]").forEach((btn) => btn.addEventListener("click", async () => {
       const company = state.companies.find((item) => item.id === btn.dataset.companyRemove);
+      if (!company || !await confirmAction(`Excluir a empresa "${company.name}" e seu desconto? As vendas anteriores serão mantidas.`)) return;
       state.companies = state.companies.filter((item) => item.id !== btn.dataset.companyRemove);
       if (company && (state.activeDiscount === company.name || state.activeDiscount === company.id)) state.activeDiscount = null;
       await saveConfigState();
@@ -3104,7 +3651,10 @@
 
   function salesInReportRange() {
     const { start, end } = reportRange();
-    return state.sales.filter((sale) => inRange(sale.date || sale.createdAt, start, end));
+    return state.sales.filter((sale) => inRange(sale.date || sale.createdAt, start, end)).sort((a, b) => {
+      const timestamp = sale => Date.parse(sale.closedAt || sale.createdAt || sale.date || "") || 0;
+      return timestamp(b) - timestamp(a) || String(a.id).localeCompare(String(b.id));
+    });
   }
 
   function debtPaymentsInReportRange(start, end) {
@@ -3387,6 +3937,9 @@
   function renderReports() {
     const { start, end } = reportRange();
     const sales = salesInReportRange();
+    $("#reportSalesTitle").textContent = start === end ? "Vendas do dia" : "Vendas do período";
+    $("#reportStartPicker").textContent = formatDate(start);
+    $("#reportEndPicker").textContent = formatDate(end);
     const payments = receivedPaymentsInReportRange(sales, start, end);
     const salePayments = sales.flatMap((sale) => sale.payments.map((payment) => ({ ...payment, sale })));
     const byMethod = (method) => payments.filter((payment) => payment.method === method).reduce((sum, payment) => sum + payment.amount, 0);
@@ -3410,6 +3963,8 @@
       ["Débito", money.format(byMethod("Débito"))],
       ["Crédito", money.format(byMethod("Crédito"))],
       ["Voucher refeição", money.format(byMethod("Voucher refeição"))],
+      ["Fiado lançado", money.format(bySaleMethod("Fiado"))],
+      ["Fiado pendente", money.format(pendingDebt)],
       ["Caixa inicial", money.format(cashStart)],
       ["Caixa final", money.format(cashFinal)],
       ["Troco deixado", money.format(keptChange)],
@@ -3449,10 +4004,10 @@
       const active = method === activeSalesFilter ? " active" : "";
       return `<button class="sales-tab${active}" data-sales-payment-filter="${method}" type="button"><span>${method}</span><strong>${count}</strong></button>`;
     }).join("");
-    const saleRows = salesForFilter.slice().reverse().map((sale) => `
+    const saleRows = salesForFilter.map((sale) => `
       <div class="sale-row">
         <div class="sale-row-main">
-          <strong>${formatDate(sale.date)} - ${money.format(sale.total)}</strong>
+          <strong>${formatDate(sale.date)}${sale.createdAt ? " · " + new Date(sale.closedAt || sale.createdAt).toLocaleTimeString("pt-BR", {hour: "2-digit", minute: "2-digit"}) : ""} - ${money.format(sale.total)}</strong>
           <span>${sale.orders.map((order) => "Comanda " + order.command).join(", ")}</span>
         </div>
         <span class="sale-payment-line">${sale.payments.map((payment) => `${payment.method} ${money.format(payment.amount)}`).join(" + ")}${sale.change ? " | Troco " + money.format(sale.change) : ""}${sale.keptChange ? " | Troco deixado " + money.format(sale.keptChange) : ""}${sale.discountCompany ? " | " + sale.discountCompany : ""}</span>
@@ -3528,9 +4083,9 @@
         <div><span>Valor real pago</span><strong>${money.format(total)}</strong></div>
       </div>
       <div class="sales-table">
-        ${companySales.slice().reverse().map((sale) => `
+        ${companySales.map((sale) => `
           <div class="sale-row">
-            <strong>${formatDate(sale.date)} - ${money.format(sale.total)}</strong>
+            <strong>${formatDate(sale.date)}${sale.createdAt ? " · " + new Date(sale.closedAt || sale.createdAt).toLocaleTimeString("pt-BR", {hour: "2-digit", minute: "2-digit"}) : ""} - ${money.format(sale.total)}</strong>
             <span>Sem desconto: ${money.format(sale.subtotal)} | Desconto: ${money.format(sale.discount)} | ${sale.orders.map((order) => "Comanda " + order.command).join(", ")}</span>
           </div>
         `).join("")}
@@ -3540,7 +4095,7 @@
 
   function reportRemovals() {
     const { start, end } = reportRange();
-    return (state.itemRemovals || []).filter((entry) => inRange(entry.date, start, end));
+    return (state.itemRemovals || []).filter((entry) => !entry.undone && inRange(entry.date, start, end));
   }
 
   function renderSafely(name, callback) {
@@ -3551,8 +4106,21 @@
     }
   }
 
+  function renderOperationalViews() {
+    renderSafely("comandas", renderCommands);
+    renderSafely("prévia", renderBalancePreview);
+    renderSafely("comandas do caixa", renderOpenOrders);
+    renderSafely("itens do caixa", renderOrderEditor);
+    renderSafely("pagamento", renderCheckout);
+    renderSafely("clientes", renderClients);
+    if (!$("#debtHistory")?.contains?.(document.activeElement)) renderSafely("histórico", renderSelectedClient);
+    renderUndoRemoval();
+  }
+
   function render() {
     normalizeRuntimeState(state);
+    renderSyncStatus();
+    renderUndoRemoval();
     renderSafely("topo", renderTopbar);
     renderSafely("segurança", renderSecurity);
     renderSafely("botão à vontade", renderBuffetButton);
@@ -3563,6 +4131,10 @@
     renderSafely("comandas do caixa", renderOpenOrders);
     renderSafely("editor de comanda", renderOrderEditor);
     renderSafely("caixa", renderCheckout);
+    renderSafely("clientes", renderClients);
+    renderSafely("formulário de cliente", renderClientForm);
+    renderSafely("histórico do cliente", renderSelectedClient);
+    renderSafely("pix do fiado", renderDebtPixBox);
     renderSafely("produtos", renderProducts);
     renderSafely("empresas", renderCompanies);
     renderSafely("relatórios", renderReports);
@@ -3571,11 +4143,71 @@
   }
 
   function bindEvents() {
+    $("#acceptConfirmationBtn").addEventListener("click", () => finishConfirmation(true));
+    for (const id of ["cancelConfirmationBtn", "closeConfirmationBtn"]) $("#" + id).addEventListener("click", () => finishConfirmation(false));
+    $("#confirmationModal").addEventListener("click", event => { if (event.target.id === "confirmationModal") finishConfirmation(false); });
+    bindDialogKeyboard($("#confirmationModal"), () => finishConfirmation(false));
+    $("#newCompanyBtn").addEventListener("click", () => {
+      $("#companyFormError").textContent = "";
+      $("#companyFormModal").classList.remove("hidden");
+      $("#companyName").focus();
+    });
+    $("#closeCompanyFormBtn").addEventListener("click", closeCompanyForm);
+    $("#companyFormModal").addEventListener("click", event => { if (event.target.id === "companyFormModal") closeCompanyForm(); });
+    bindDialogKeyboard($("#companyFormModal"), closeCompanyForm);
+    for (const target of ["reportStart", "reportEnd"]) $("#" + target + "Picker").addEventListener("click", () => openCalendar(target));
+    $("#closeCalendarBtn").addEventListener("click", closeCalendar);
+    $("#calendarModal").addEventListener("click", event => { if (event.target.id === "calendarModal") closeCalendar(); });
+    bindDialogKeyboard($("#calendarModal"), closeCalendar);
+    for (const [id, delta] of [["calendarPrev", -1], ["calendarNext", 1]]) $("#" + id).addEventListener("click", () => { calendarMonth.setMonth(calendarMonth.getMonth() + delta); drawCalendar(); });
+    $("#calendarToday").addEventListener("click", () => chooseCalendarDate(todayIso()));
+
+    $("#archiveClientBtn").addEventListener("click", async () => {
+      const client = state.clients.find(item => item.id === state.selectedClientId);
+      if (!client) return;
+      if (Math.abs(clientBalance(client)) >= 0.005) {
+        await confirmAction("Este cliente ainda tem saldo pendente. Acerte o saldo antes de excluir.", "Cliente com saldo", "Entendi", true);
+        return;
+      }
+      if (await confirmAction(`Excluir o cliente "${client.name}"? O histórico será preservado.`)) setClientArchived(client.id, true);
+    });
+    $("#restoreClientBtn").addEventListener("click", () => setClientArchived(state.selectedClientId, false));
+    if (!$("#clientFormModal")) {
+      const clientForm = $("#clientForm");
+      const modal = document.createElement("div");
+      const card = document.createElement("div");
+      const title = document.createElement("h2");
+      modal.className = "modal hidden";
+      modal.id = "clientFormModal";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-labelledby", "clientFormTitle");
+      card.className = "modal-card";
+      title.id = "clientFormTitle";
+      title.textContent = "Novo cliente";
+      card.appendChild(title);
+      card.appendChild(clientForm);
+      modal.appendChild(card);
+      document.body.appendChild(modal);
+    }
+
+    if (!$("#cancelClientBtn")) {
+      const cancelClient = document.createElement("button");
+      cancelClient.className = "secondary";
+      cancelClient.id = "cancelClientBtn";
+      cancelClient.type = "button";
+      cancelClient.textContent = "Cancelar";
+      $("#clientForm").appendChild(cancelClient);
+    }
 
     $$(".tab").forEach((tab) => tab.addEventListener("click", () => {
       if (!canAccess(tab.dataset.view)) return;
       activateView(tab.dataset.view);
       if (tab.dataset.view === "relatorios") refreshReportPeriod();
+      if (tab.dataset.view === "config" && state.productPopularity?.to !== todayIso()) {
+        const category = Object.keys(productCategories).find(key => state.productSortModes[key] === "popularity");
+        if (category) setProductSort(category, "popularity");
+      }
     }));
 
     $("#cancelRemovalBtn").addEventListener("click", () => {
@@ -3683,7 +4315,7 @@
       render();
     });
 
-    ["#scaleValue", "#paymentAmount", "#manualDiscountAmount", "#productPrice", "#cashStart", "#changeGiven", "#buffetPrice", "#pixModalAmountInput"].forEach(wireMoneyInput);
+    ["#scaleValue", "#paymentAmount", "#manualDiscountAmount", "#debtPaymentAmount", "#productPrice", "#cashStart", "#changeGiven", "#buffetPrice", "#pixModalAmountInput"].forEach(wireMoneyInput);
 
     $("#addMealBtn").addEventListener("click", () => {
       const value = parseMoney($("#scaleValue").value);
@@ -3759,9 +4391,28 @@
       if ($("#paymentMethod").value === "Pix") openPixModal();
     });
 
+    $("#checkoutClient").addEventListener("change", () => {
+      state.selectedCheckoutClientId = $("#checkoutClient").value;
+      saveLocalState();
+      renderClientOptions();
+    });
 
     $("#pixModalAmountInput").addEventListener("input", renderPixModal);
 
+    $("#debtPaymentMethod").addEventListener("change", renderDebtPixBox);
+    $("#debtPaymentAmount").addEventListener("input", renderDebtPixBox);
+
+    $("#copyDebtPixBtn").addEventListener("click", async () => {
+      const code = $("#debtPixCopyCode").value;
+      if (!code) return;
+      try {
+        await navigator.clipboard.writeText(code);
+        $("#debtPixHint").textContent = "Código Pix copiado.";
+      } catch {
+        $("#debtPixCopyCode").select();
+        $("#debtPixHint").textContent = "Selecionei o código. Copie manualmente.";
+      }
+    });
 
     $("#addPaymentBtn").addEventListener("click", () => {
       const amount = parseMoney($("#paymentAmount").value) || remainingTotal();
@@ -3798,6 +4449,122 @@
       closeSelectedOrders({ changeGiven: 0, keptChange });
     });
 
+    $("#saveClientBtn").addEventListener("click", () => {
+      const name = $("#clientName").value.trim();
+      if (!name) return alert("Informe o nome do cliente.");
+      const editing = state.clients.find((item) => item.id === state.editingClientId);
+      const client = editing || { id: id(), name: "", phone: "", note: "", entries: [] };
+      const shouldReturnToCheckout = state.returnToCheckoutAfterClient;
+      client.name = name;
+      client.phone = $("#clientPhone").value.replace(/\D/g, "");
+      client.note = $("#clientNote").value.trim();
+      if (!editing) state.clients.push(client);
+      if (shouldReturnToCheckout) state.selectedCheckoutClientId = client.id;
+      else state.selectedClientId = client.id;
+      state.showClientForm = false;
+      state.editingClientId = null;
+      state.returnToCheckoutAfterClient = false;
+      $("#clientName").value = "";
+      $("#clientPhone").value = "";
+      $("#clientNote").value = "";
+      saveState({ clientsChanged: true });
+      render();
+    });
+
+    $("#newClientBtn").addEventListener("click", () => {
+      state.editingClientId = null;
+      state.returnToCheckoutAfterClient = false;
+      state.showClientForm = !state.showClientForm;
+      $("#clientName").value = "";
+      $("#clientPhone").value = "";
+      $("#clientNote").value = "";
+      saveLocalState();
+      renderClientForm();
+      if (state.showClientForm) setTimeout(() => $("#clientName").focus(), 0);
+    });
+
+    $("#cancelClientBtn").addEventListener("click", () => {
+      state.showClientForm = false;
+      state.editingClientId = null;
+      state.returnToCheckoutAfterClient = false;
+      $("#clientName").value = "";
+      $("#clientPhone").value = "";
+      $("#clientNote").value = "";
+      saveLocalState();
+      renderClientForm();
+    });
+
+    $("#clientFormModal").addEventListener("click", (event) => {
+      if (event.target.id !== "clientFormModal") return;
+      state.showClientForm = false;
+      state.editingClientId = null;
+      state.returnToCheckoutAfterClient = false;
+      saveLocalState();
+      renderClientForm();
+    });
+    $("#closeClientDetailBtn").addEventListener("click", () => {
+      state.selectedClientId = null;
+      saveLocalState();
+      render();
+    });
+    $("#clientDetailModal").addEventListener("click", (event) => {
+      if (event.target.id !== "clientDetailModal") return;
+      state.selectedClientId = null;
+      saveLocalState();
+      render();
+    });
+
+    $("#newClientFromCheckoutBtn").addEventListener("click", () => {
+      state.editingClientId = null;
+      state.returnToCheckoutAfterClient = true;
+      state.showClientForm = true;
+      saveLocalState();
+      renderClientForm();
+      setTimeout(() => $("#clientName").focus(), 0);
+    });
+
+    $("#clientSearch").addEventListener("input", renderClients);
+
+    $("#editClientBtn").addEventListener("click", () => {
+      const client = state.clients.find((item) => item.id === state.selectedClientId);
+      if (!client) return;
+      state.editingClientId = client.id;
+      state.showClientForm = true;
+      $("#clientName").value = client.name;
+      $("#clientPhone").value = client.phone;
+      $("#clientNote").value = client.note || "";
+      saveLocalState();
+      renderClientForm();
+      setTimeout(() => $("#clientName").focus(), 0);
+    });
+
+    $("#payDebtBtn").addEventListener("click", () => {
+      const client = state.clients.find((item) => item.id === state.selectedClientId);
+      const amount = parseMoney($("#debtPaymentAmount").value);
+      if (!client || !amount) return;
+      client.entries.push({ id: id(), type: "payment", amount, method: $("#debtPaymentMethod").value, date: todayIso(), origin: "Abatimento" });
+      $("#debtPaymentAmount").value = "";
+      saveState({ clientsChanged: true });
+      render();
+      renderDebtPixBox();
+    });
+
+    $("#whatsappBtn").addEventListener("click", () => {
+      const client = state.clients.find((item) => item.id === state.selectedClientId);
+      if (!client || !client.phone) return;
+      const text = encodeURIComponent(clientDebtWhatsappMessage(client));
+      window.open(`https://wa.me/55${client.phone}?text=${text}`, "_blank");
+    });
+
+    $("#openDebtDetailBtn").addEventListener("click", openDebtDetailModal);
+    $("#closeDebtDetailBtn").addEventListener("click", closeDebtDetailModal);
+    $("#debtDetailModal").addEventListener("click", (event) => {
+      if (event.target.id === "debtDetailModal") closeDebtDetailModal();
+    });
+    $("#debtDetailStart").addEventListener("change", renderDebtDetailPreview);
+    $("#debtDetailEnd").addEventListener("change", renderDebtDetailPreview);
+    $("#downloadDebtImageBtn").addEventListener("click", downloadDebtDetailImage);
+    $("#sendDebtWhatsappBtn").addEventListener("click", sendDebtDetailWhatsapp);
     if ($("#saveScheduleBtn")) $("#saveScheduleBtn").addEventListener("click", saveScheduleFromForm);
     if ($("#scheduleType")) $("#scheduleType").addEventListener("change", renderScheduleFrequencyFields);
     if ($("#scheduleFrequency")) $("#scheduleFrequency").addEventListener("change", renderScheduleFrequencyFields);
@@ -3814,7 +4581,7 @@
       state.products.push({ id: id(), name, price, front: true, category, image });
       $("#productName").value = "";
       $("#productPrice").value = "";
-      $("#productCategory").value = "outros";
+      $("#productCategory").value = "bebidas";
       if (imageInput) imageInput.value = "";
       await saveConfigState();
       render();
@@ -3823,18 +4590,19 @@
     $("#saveCompanyBtn").addEventListener("click", async () => {
       const name = $("#companyName").value.trim();
       const discount = percentValue($("#companyDiscount").value || 5);
-      if (!name) return alert("Informe o nome da empresa.");
+      if (!name) { $("#companyFormError").textContent = "Informe o nome da empresa."; return; }
       const logo = await readImageFile($("#companyLogo").files && $("#companyLogo").files[0]);
       state.companies.push({ id: id(), name, discount, logo });
       $("#companyName").value = "";
       $("#companyDiscount").value = "";
       $("#companyLogo").value = "";
+      closeCompanyForm();
       await saveConfigState();
       render();
     });
 
     $("#saveCommandMaxBtn").addEventListener("click", async () => {
-      state.commandMax = Number($("#commandMax").value || 100);
+      state.commandMax = Math.min(50, Math.max(1, Number($("#commandMax").value || 50)));
       await saveConfigState();
       render();
     });
@@ -3872,11 +4640,25 @@
     $("#reportEnd").value = todayIso();
   }
 
+  function configureCheckoutScroll() {
+    const panel = $("#view-caixa .checkout-panel");
+    if (!panel) return;
+    const update = () => {
+      panel.classList.toggle("checkout-scrolls-with-page", panel.getBoundingClientRect().height > window.innerHeight - 24);
+    };
+    // Keep the payment panel sticky only when every action fits; the page always owns scrolling.
+    if (window.ResizeObserver) new window.ResizeObserver(update).observe(panel);
+    window.addEventListener("resize", update);
+    update();
+  }
+
   async function bootstrap() {
+    configureCheckoutScroll();
+    scheduleMenuDayRefresh();
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.addEventListener("message", (event) => {
-        if (event.data && event.data.type === "APP_UPDATED" && !sessionStorage.getItem("estalagem-pdv-reloaded-v57")) {
-          sessionStorage.setItem("estalagem-pdv-reloaded-v57", "1");
+        if (event.data && event.data.type === "APP_UPDATED" && !sessionStorage.getItem("estalagem-pdv-reloaded-v69")) {
+          sessionStorage.setItem("estalagem-pdv-reloaded-v69", "1");
           window.location.reload();
         }
       });
@@ -3885,12 +4667,44 @@
       });
     }
     document.body.classList.toggle("supabase-enabled", !!supabaseClient);
-    window.addEventListener("focus", refreshRemoteState);
-    window.addEventListener("online", refreshRemoteState);
+    const reconnect = () => {
+      refreshMenuDay();
+      scheduleMenuDayRefresh();
+      syncError = "";
+      if (localPendingSync && remoteLoaded) scheduleRemoteSync(0);
+      else refreshRemoteState({ forceClients: true, forceSettings: true });
+    };
+    window.addEventListener("focus", reconnect);
+    window.addEventListener("online", reconnect);
+    window.addEventListener("offline", renderSyncStatus);
+    $("#retrySyncBtn")?.addEventListener("click", reconnect);
     document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) refreshRemoteState();
+      if (!document.hidden) reconnect();
     });
+    if (hasSupabaseConfig && !supabaseClient) {
+      saveSession(null);
+      syncError = "Não foi possível carregar a conexão. Verifique a internet e recarregue o aplicativo.";
+      $("#authError").textContent = syncError;
+    }
     if (supabaseClient) {
+      supabaseClient.auth.onAuthStateChange((event) => {
+        if (event === "SIGNED_OUT") {
+          stopRemotePolling();
+          if (remoteChannel) {
+            const channel = remoteChannel;
+            remoteChannel = null;
+            supabaseClient.removeChannel(channel).catch(() => {});
+          }
+          remoteLoaded = false;
+          syncError = localPendingSync ? "Sessão encerrada. Entre novamente para enviar as alterações pendentes." : "";
+          $("#authError").textContent = syncError;
+          saveSession(null);
+          saveLocalState();
+          render();
+        } else if (event === "TOKEN_REFRESHED") {
+          setTimeout(reconnect, 0);
+        }
+      });
       const { data } = await supabaseClient.auth.getSession();
       if (data.session && data.session.user) {
         const profile = await loadSupabaseProfile(data.session.user.id);

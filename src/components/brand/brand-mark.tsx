@@ -26,6 +26,10 @@ export function BrandMark({ surface, format = "lockup", className }: BrandMarkPr
       alt={isSymbol ? "Símbolo KO Systems" : "KO Systems"}
       className={className}
       style={style}
+      width={isSymbol ? 512 : 2000}
+      height={isSymbol ? 512 : 2000}
+      loading="lazy"
+      decoding="async"
       draggable={false}
     />
   );
